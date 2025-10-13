@@ -1,0 +1,61 @@
+{
+  "project": {
+    "name": "UI CoreWork",
+    "version": "3.1",
+    "description": "智慧設計協作平台",
+    "author": "簡俊能"
+  },
+  "python": {
+    "required_version": "3.8",
+    "recommended_version": "3.11.5",
+    "download_url": "https://www.python.org/ftp/python/3.11.5/python-3.11.5-amd64.exe",
+    "installer_args": "/quiet InstallAllUsers=1 PrependPath=1 Include_test=0"
+  },
+  "dependencies": {
+    "requirements_file": "backend/requirements.txt",
+    "upgrade_pip": true,
+    "trusted_hosts": [],
+    "timeout": 300
+  },
+  "database": {
+    "type": "sqlite",
+    "init_script": "database/init_db.py",
+    "data_file": "database/uicorework.db"
+  },
+  "directories": {
+    "venv": "venv",
+    "logs": "logs",
+    "uploads": "uploads",
+    "backups": "backups"
+  },
+  "shortcuts": {
+    "desktop": true,
+    "start_menu": false,
+    "target_name": "UI CoreWork"
+  },
+  "server": {
+    "host": "localhost",
+    "port": 8000,
+    "auto_open_browser": true,
+    "browser_delay": 3
+  },
+  "features": [
+    "多模態繪圖系統（觸控筆支援）",
+    "AI 智慧聊天（5行對話框）",
+    "範例展示和套用",
+    "即時設計協作",
+    "3D 模型預覽功能",
+    "即時翻譯功能"
+  ],
+  "backup": {
+    "enabled": true,
+    "max_backups": 3,
+    "backup_suffix": "_backup"
+  },
+  "validation": {
+    "check_free_space": 500,
+    "check_network": true,
+    "check_admin": false,
+    "check_existing_install": true
+  }
+}

@@ -1,0 +1,2677 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UI CoreWork - 智能設計協作平台</title>
+    
+    <!-- KaTeX for mathematical formula rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" integrity="sha384-cpW21h6RZv/phavutF+AuVYrr+dA8xD9zs6FwLpaCct6O9ctzYFfFr4dgmgccOTx" crossorigin="anonymous"></script>
+    
+    <!-- html2canvas for canvas to image conversion -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    
+    <style>
+        .right-panel-container {
+            display: grid;
+            grid-template-rows: 1fr auto 1fr;
+            gap: 10px;
+            height: 100%;
+        }
+        
+        .mindmap-area {
+            background: #f8f9fa;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-style: italic;
+            min-height: 200px;
+        }
+        
+        .chat-messages {
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            font-size: 14px;
+        }
+        
+        .panel-divider {
+            height: 4px;
+            background: #ddd;
+            cursor: row-resize;
+            border-radius: 2px;
+            transition: background 0.2s;
+            position: relative;
+            user-select: none;
+        }
+        
+        .panel-divider:hover {
+            background: #3498db;
+        }
+        
+        .panel-divider::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: 0;
+            right: 0;
+            height: 8px;
+            cursor: row-resize;
+        }
+        
+        .resizable-panel {
+            min-height: 100px;
+            overflow: hidden;
+        }     * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            color: #2c3e50;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            color: #3498db;
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+        
+        .workspace {
+            display: grid;
+            grid-template-columns: 125px 1fr 300px;
+            gap: 15px;
+            margin-bottom: 20px;
+            height: calc(100vh - 120px);
+        }
+        
+        .panel {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .panel-header {
+            background: #3498db;
+            color: white;
+            padding: 8px 12px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .panel-content {
+            padding: 12px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .drawing-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            position: relative;
+            height: 500px;
+        }
+        
+        #drawing-canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            cursor: crosshair;
+            display: block;
+        }
+        
+        .tool-group {
+            margin-bottom: 15px;
+        }
+        
+        .tool-group h4 {
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        .tool-buttons, .mode-buttons {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .mode-buttons {
+            grid-template-columns: 1fr 1fr;
+        }
+        
+        .tool-btn, .mode-btn {
+            background: #ecf0f1;
+            border: 2px solid transparent;
+            border-radius: 6px;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            text-align: center;
+        }
+        
+        .tool-btn:hover, .mode-btn:hover {
+            background: #d5dbdb;
+        }
+        
+        .tool-btn.active, .mode-btn.active {
+            background: #3498db;
+            color: white;
+            border-color: #2980b9;
+        }
+        
+        .mode-btn.active[data-mode="select"] {
+            background: #e67e22;
+            border-color: #d35400;
+        }
+        
+        .color-picker {
+            width: 100%;
+            height: 30px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 8px;
+        }
+        
+        .color-swatches {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+        }
+        
+        .color-swatch {
+            width: 100%;
+            height: 25px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .color-swatch:hover {
+            transform: scale(1.1);
+            border-color: #2c3e50;
+        }
+        
+        .size-slider {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .size-display {
+            text-align: center;
+            font-weight: 600;
+            color: #3498db;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        /* 對話框樣式 */
+        .dialog-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .dialog-content {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            max-width: 400px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .dialog-header {
+            padding: 20px 20px 15px;
+            border-bottom: 1px solid #eee;
+            text-align: center;
+        }
+
+        .dialog-header h3 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 18px;
+        }
+
+        .dialog-body {
+            padding: 20px;
+        }
+
+        .dialog-body p {
+            margin: 0 0 20px 0;
+            color: #666;
+            text-align: center;
+        }
+
+        .mode-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .mode-btn {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .mode-btn:hover {
+            border-color: #3498db;
+            background: #f8f9ff;
+        }
+
+        .mode-icon {
+            font-size: 24px;
+            margin-right: 15px;
+            width: 30px;
+            text-align: center;
+        }
+
+        .mode-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 3px;
+        }
+
+        .mode-desc {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.3;
+        }
+
+        .dialog-footer {
+            padding: 15px 20px 20px;
+            border-top: 1px solid #eee;
+            text-align: center;
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+        
+        .chat-messages {
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #f8f9fa;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        
+        .user-message {
+            background: #e3f2fd;
+            margin-left: 20px;
+        }
+        
+        .ai-message {
+            background: #f1f8e9;
+            margin-right: 20px;
+        }
+        
+        .chat-input {
+            width: 100%;
+            height: 100px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        .send-button {
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .loading-text {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            color: #3498db;
+            font-weight: 600;
+            z-index: 1000;
+        }
+        
+        .main-content {
+            display: none;
+        }
+        
+        @media (max-width: 1000px) {
+            .workspace {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+        }
+        
+        /* 範例展示區域 */
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .example-item {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .example-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .example-image {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            background: #ecf0f1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+        }
+        
+        .example-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .example-description {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            line-height: 1.4;
+        }
+        
+        .loading-indicator {
+            text-align: center;
+            padding: 20px;
+            color: #3498db;
+            font-size: 16px;
+        }
+        
+        .analysis-result {
+            background: #e8f5e8;
+            border: 1px solid #27ae60;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .analysis-title {
+            font-weight: 600;
+            color: #27ae60;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 載入指示器 -->
+    <div id="loading" class="loading-text">🎨 載入中...</div>
+    
+    <!-- 主要內容 -->
+    <div id="main-content" class="main-content">
+        <div class="container">
+            <!-- 標題 -->
+            <div class="header">
+                <h1>🎨 UI CoreWork</h1>
+                <p>智能設計協作平台 - 繪圖 & 聊天</p>
+            </div>
+            
+            <!-- 主工作區 -->
+            <div class="workspace">
+                <!-- 工具面板 -->
+                <div class="panel">
+                    <div class="panel-header">🛠️ 繪圖工具</div>
+                    <div class="panel-content">
+                        <div class="tool-group">
+                            <h4>功能</h4>
+                            <button class="tool-btn" id="select-area-btn" style="width: 100%; margin-bottom: 10px; background: #3498db; color: white;">
+                                🔲 圈選區域
+                            </button>
+                            <button class="tool-btn" id="move-btn" style="width: 100%; margin-bottom: 10px; background: #9b59b6; color: white;">
+                                🖐️ 移動選取
+                            </button>
+                            <button class="tool-btn" id="scale-btn" style="width: 100%; margin-bottom: 10px; background: #f39c12; color: white;">
+                                🔍 縮放選取
+                            </button>
+                            <button class="tool-btn" id="delete-btn" style="width: 100%; margin-bottom: 10px; background: #e74c3c; color: white;">
+                                🗑️ 刪除選取
+                            </button>
+                            <button class="tool-btn" id="test-content-btn" style="width: 100%; margin-bottom: 10px; background: #9b59b6; color: white;">
+                                🧪 添加測試內容
+                            </button>
+                        </div>
+                        
+                        <div class="tool-group">
+                            <h4>繪圖工具</h4>
+                            <div class="tool-buttons">
+                                <button class="tool-btn active" data-tool="pen">✏️ 筆</button>
+                                <button class="tool-btn" data-tool="eraser">🧽 擦</button>
+                            </div>
+                        </div>
+                        
+                        <div class="tool-group">
+                            <h4>顏色</h4>
+                            <input type="color" id="color-picker" class="color-picker" value="#2c3e50">
+                            <div class="color-swatches">
+                                <div class="color-swatch" style="background: #2c3e50;" data-color="#2c3e50"></div>
+                                <div class="color-swatch" style="background: #e74c3c;" data-color="#e74c3c"></div>
+                                <div class="color-swatch" style="background: #3498db;" data-color="#3498db"></div>
+                                <div class="color-swatch" style="background: #2ecc71;" data-color="#2ecc71"></div>
+                                <div class="color-swatch" style="background: #f39c12;" data-color="#f39c12"></div>
+                                <div class="color-swatch" style="background: #9b59b6;" data-color="#9b59b6"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="tool-group">
+                            <h4>筆刷大小</h4>
+                            <input type="range" id="size-slider" class="size-slider" min="1" max="50" value="5">
+                            <div id="size-display" class="size-display">5px</div>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button id="clear-btn" class="btn btn-danger">清除</button>
+                            <button id="analyze-btn" class="btn btn-primary">分析圖像</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 繪圖區域 -->
+                <div class="panel">
+                    <div class="panel-header">🎨 畫布</div>
+                    <div class="panel-content">
+                        <div class="drawing-area">
+                            <canvas id="drawing-canvas"></canvas>
+                        </div>
+                        <div class="action-buttons">
+                            <button id="save-btn" class="btn btn-primary">儲存作品</button>
+                            <button id="save-to-project-btn" class="btn btn-primary">保存到項目</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 右側面板區域 -->
+                <div class="panel">
+                    <div class="right-panel-container">
+                        <!-- 心智圖區域 -->
+                        <div id="mindmap-panel" class="mindmap-section resizable-panel">
+                            <div class="panel-header">🧠 心智圖區域</div>
+                            <div class="mindmap-area">
+                                <div>心智圖功能開發中...</div>
+                            </div>
+                        </div>
+                        
+                        <!-- 分隔線 -->
+                        <div id="panel-resizer" class="panel-divider" title="拖拽調整大小"></div>
+                        
+                        <!-- 聊天區域 -->
+                        <div id="chat-panel" class="chat-section resizable-panel">
+                            <div class="panel-header">💬 AI 助手</div>
+                            <div class="panel-content">
+                                <div id="chat-messages" class="chat-messages">
+                                    <div class="message ai-message">
+                                        <strong>AI:</strong> 歡迎使用 UI CoreWork！我可以：<br>
+                                        🎨 分析您的繪圖<br>
+                                        🔍 搜尋相關範例<br>
+                                        📚 提供設計建議<br>
+                                        請開始繪圖或向我提問！
+                                    </div>
+                                </div>
+                                <textarea id="chat-input" class="chat-input" placeholder="輸入您的訊息... (Enter 發送)&#10;例如: '請分析這個圖形' 或 '找一些按鈕設計範例'" style="height: 60px; font-size: 12px;"></textarea>
+                                <button id="send-btn" class="btn btn-primary send-button" style="padding: 8px 12px; font-size: 12px;">發送訊息</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 範例圖片展示區域 -->
+            <div id="examples-section" class="panel" style="display: none; margin-top: 20px;">
+                <div class="panel-header">🖼️ 設計範例與建議</div>
+                <div class="panel-content">
+                    <div id="examples-grid" class="examples-grid"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 設置面板調整功能
+        function setupPanelResizer() {
+            const resizer = document.getElementById('panel-resizer');
+            const mindMapPanel = document.getElementById('mind-map-panel');
+            const chatPanel = document.getElementById('chat-panel');
+            
+            if (!resizer || !mindMapPanel || !chatPanel) {
+                console.warn('Panel resizer elements not found');
+                return;
+            }
+            
+            let isResizing = false;
+            let startY = 0;
+            let startMindMapHeight = 0;
+            let startChatHeight = 0;
+            
+            resizer.addEventListener('mousedown', function(e) {
+                isResizing = true;
+                startY = e.clientY;
+                startMindMapHeight = mindMapPanel.offsetHeight;
+                startChatHeight = chatPanel.offsetHeight;
+                
+                document.body.style.cursor = 'row-resize';
+                document.body.style.userSelect = 'none';
+                
+                e.preventDefault();
+            });
+            
+            document.addEventListener('mousemove', function(e) {
+                if (!isResizing) return;
+                
+                const deltaY = e.clientY - startY;
+                const containerHeight = mindMapPanel.parentElement.offsetHeight;
+                const resizerHeight = resizer.offsetHeight;
+                const availableHeight = containerHeight - resizerHeight;
+                
+                let newMindMapHeight = startMindMapHeight + deltaY;
+                let newChatHeight = startChatHeight - deltaY;
+                
+                // 設置最小高度限制
+                const minHeight = 100;
+                if (newMindMapHeight < minHeight) {
+                    newMindMapHeight = minHeight;
+                    newChatHeight = availableHeight - minHeight;
+                } else if (newChatHeight < minHeight) {
+                    newChatHeight = minHeight;
+                    newMindMapHeight = availableHeight - minHeight;
+                }
+                
+                // 確保總高度不超過容器高度
+                if (newMindMapHeight + newChatHeight > availableHeight) {
+                    const ratio = availableHeight / (newMindMapHeight + newChatHeight);
+                    newMindMapHeight *= ratio;
+                    newChatHeight *= ratio;
+                }
+                
+                mindMapPanel.style.height = newMindMapHeight + 'px';
+                chatPanel.style.height = newChatHeight + 'px';
+            });
+            
+            document.addEventListener('mouseup', function() {
+                if (isResizing) {
+                    isResizing = false;
+                    document.body.style.cursor = '';
+                    document.body.style.userSelect = '';
+                }
+            });
+        }
+        
+        // 等待 DOM 載入完成
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('UI CoreWork initializing...');
+            console.log('Loading element:', document.getElementById('loading'));
+            console.log('Main content element:', document.getElementById('main-content'));
+            
+            // 隱藏載入指示器，顯示主要內容
+            setTimeout(() => {
+                const loadingEl = document.getElementById('loading');
+                const mainContentEl = document.getElementById('main-content');
+                
+                if (loadingEl) {
+                    loadingEl.style.display = 'none';
+                    console.log('Loading hidden');
+                } else {
+                    console.error('Loading element not found!');
+                }
+                
+                if (mainContentEl) {
+                    mainContentEl.style.display = 'block';
+                    console.log('Main content shown');
+                    initializeApp();
+                } else {
+                    console.error('Main content element not found!');
+                }
+            }, 500);
+        });
+        
+        // ===== 全局函數聲明 =====
+        
+        // 聊天消息函數
+        function addChatMessage(sender, message) {
+            const chatMessages = document.getElementById('chat-messages');
+            if (!chatMessages) {
+                console.warn('Chat messages element not found');
+                return;
+            }
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ' + (sender === 'AI' ? 'ai-message' : 'user-message');
+            messageDiv.innerHTML = '<strong>' + sender + ':</strong> ' + message;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // 繪製選擇矩形
+        function drawSelectionRect() {
+            if (!ctx || !canvas) return; // 檢查是否已初始化
+            
+            redrawCanvas();
+            
+            // 繪製選擇矩形
+            ctx.save();
+            ctx.strokeStyle = '#007bff';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.strokeRect(
+                selectionStart.x,
+                selectionStart.y,
+                selectionEnd.x - selectionStart.x,
+                selectionEnd.y - selectionStart.y
+            );
+            ctx.restore();
+        }
+        
+        // 重繪畫布
+        function redrawCanvas() {
+            if (!ctx || !canvas) return; // 檢查是否已初始化
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 重繪所有筆畫
+            strokes.forEach(stroke => {
+                // 如果是圖片類型的筆畫（公式渲染結果）
+                if (stroke.tool === 'image' && stroke.image) {
+                    ctx.save();
+                    ctx.drawImage(stroke.image, stroke.x, stroke.y, stroke.width, stroke.height);
+                    ctx.restore();
+                    return;
+                }
+                
+                // 原有的筆畫繪製邏輯
+                if (stroke.points && stroke.points.length < 2) return;
+                
+                ctx.save();
+                ctx.globalCompositeOperation = stroke.tool === 'eraser' ? 'destination-out' : 'source-over';
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+                ctx.lineWidth = stroke.size;
+                ctx.strokeStyle = stroke.color;
+                
+                ctx.beginPath();
+                ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+                
+                for (let i = 1; i < stroke.points.length; i++) {
+                    ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+                }
+                
+                ctx.stroke();
+                ctx.restore();
+            });
+
+            // 重繪所有圖片
+            images.forEach(image => {
+                ctx.save();
+                if (image.imageData) {
+                    // 如果是真實圖片數據
+                    const img = new Image();
+                    img.onload = function() {
+                        ctx.drawImage(img, image.x, image.y, image.width, image.height);
+                    };
+                    img.src = image.imageData;
+                } else if (image.color) {
+                    // 測試內容：繪製彩色矩形
+                    ctx.fillStyle = image.color;
+                    ctx.fillRect(image.x, image.y, image.width, image.height);
+                    ctx.strokeStyle = '#000';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(image.x, image.y, image.width, image.height);
+
+                    // 如果有文本（如公式），繪製文本
+                    if (image.text) {
+                        ctx.fillStyle = '#fff';
+                        ctx.font = '16px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(image.text,
+                                   image.x + image.width/2,
+                                   image.y + image.height/2);
+                    }
+                }
+                ctx.restore();
+            });
+        }
+        
+        // 處理選中區域
+        function processSelection(selection) {
+            if (!ctx || !canvas) return; // 檢查是否已初始化
+            
+            console.log('Selection area:', selection);
+            
+            // 提取選中區域的圖像數據
+            const imageData = ctx.getImageData(selection.x, selection.y, selection.width, selection.height);
+            
+            // 創建臨時canvas來處理選中區域
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = selection.width;
+            tempCanvas.height = selection.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            // 先填充白色背景，確保數學公式識別清晰度
+            tempCtx.fillStyle = 'white';
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            
+            // 再放上選中的內容
+            tempCtx.putImageData(imageData, 0, 0);
+            
+            // 轉換為base64圖像
+            const imageBase64 = tempCanvas.toDataURL('image/png');
+            
+            // 顯示處理選項
+            showSelectionOptions(selection, imageBase64);
+        }
+        
+        // 顯示選擇處理選項（使用絕對定位浮動按鈕）
+        function showSelectionOptions(selection, imageBase64) {
+            console.log('🎨 showSelectionOptions 被調用');
+            console.log('   選擇區域:', selection);
+            console.log('   圖片數據存在:', !!imageBase64);
+            
+            // 移除任何現有的選擇按鈕
+            removeSelectionButtons();
+            
+            // 創建浮動按鈕容器
+            const buttonContainer = document.createElement('div');
+            buttonContainer.id = 'selection-buttons';
+            buttonContainer.style.cssText = `
+                position: absolute;
+                background: white;
+                border: 2px solid #007bff;
+                border-radius: 8px;
+                padding: 12px;
+                box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+                z-index: 1000;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                min-width: 220px;
+                font-family: Arial, sans-serif;
+            `;
+            
+            // 計算按鈕位置（相對於畫布容器）
+            const canvasRect = canvas.getBoundingClientRect();
+            const containerRect = canvas.parentElement.getBoundingClientRect();
+            
+            // 初始位置：選擇框右側
+            let buttonX = selection.x + selection.width + 15;
+            let buttonY = selection.y;
+            
+            // 智能位置調整
+            const buttonWidth = 220;
+            const buttonHeight = 180;
+            
+            // 如果右側空間不夠，放在左側
+            if (buttonX + buttonWidth > canvas.width) {
+                buttonX = selection.x - buttonWidth - 15;
+            }
+            
+            // 如果左側也不夠，放在選擇框下方
+            if (buttonX < 0) {
+                buttonX = selection.x;
+                buttonY = selection.y + selection.height + 15;
+            }
+            
+            // 如果下方空間不夠，放在上方
+            if (buttonY + buttonHeight > canvas.height) {
+                buttonY = selection.y - buttonHeight - 15;
+            }
+            
+            // 確保不超出邊界
+            buttonX = Math.max(10, Math.min(buttonX, canvas.width - buttonWidth - 10));
+            buttonY = Math.max(10, Math.min(buttonY, canvas.height - buttonHeight - 10));
+            
+            // 轉換為頁面絕對坐標
+            buttonContainer.style.left = (containerRect.left + buttonX) + 'px';
+            buttonContainer.style.top = (containerRect.top + buttonY) + 'px';
+            
+            // 創建標題
+            const title = document.createElement('div');
+            title.style.cssText = `
+                font-weight: bold; 
+                margin-bottom: 8px; 
+                color: #333;
+                font-size: 14px;
+                text-align: center;
+            `;
+            title.textContent = `選中區域 ${Math.round(selection.width)}×${Math.round(selection.height)}`;
+            buttonContainer.appendChild(title);
+            
+            // 創建數學公式轉換按鈕
+            const mathButton = document.createElement('button');
+            mathButton.style.cssText = `
+                background: linear-gradient(135deg, #28a745, #20c997);
+                color: white;
+                border: none;
+                padding: 10px 15px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 13px;
+                font-weight: 500;
+                transition: all 0.2s ease;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+            `;
+            mathButton.innerHTML = '🧮 數學公式轉換';
+            mathButton.onmouseover = () => mathButton.style.transform = 'translateY(-1px)';
+            mathButton.onmouseout = () => mathButton.style.transform = 'translateY(0)';
+            mathButton.onclick = () => {
+                removeSelectionButtons();
+                processMathFormula({selection, imageBase64});
+            };
+            buttonContainer.appendChild(mathButton);
+            
+            // 創建心智圖編輯按鈕
+            const mindmapButton = document.createElement('button');
+            mindmapButton.style.cssText = `
+                background: linear-gradient(135deg, #17a2b8, #138496);
+                color: white;
+                border: none;
+                padding: 10px 15px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 13px;
+                font-weight: 500;
+                transition: all 0.2s ease;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+            `;
+            mindmapButton.innerHTML = '🗺️ 心智圖編輯';
+            mindmapButton.onmouseover = () => mindmapButton.style.transform = 'translateY(-1px)';
+            mindmapButton.onmouseout = () => mindmapButton.style.transform = 'translateY(0)';
+            mindmapButton.onclick = () => {
+                removeSelectionButtons();
+                processMindMap({selection, imageBase64});
+            };
+            buttonContainer.appendChild(mindmapButton);
+            
+            // 創建取消按鈕
+            const cancelButton = document.createElement('button');
+            cancelButton.style.cssText = `
+                background: linear-gradient(135deg, #dc3545, #c82333);
+                color: white;
+                border: none;
+                padding: 8px 12px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 12px;
+                font-weight: 500;
+                transition: all 0.2s ease;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+            `;
+            cancelButton.innerHTML = '❌ 取消選擇';
+            cancelButton.onmouseover = () => cancelButton.style.transform = 'translateY(-1px)';
+            cancelButton.onmouseout = () => cancelButton.style.transform = 'translateY(0)';
+            cancelButton.onclick = () => {
+                removeSelectionButtons();
+                clearSelection();
+            };
+            buttonContainer.appendChild(cancelButton);
+            
+            // 添加到頁面
+            document.body.appendChild(buttonContainer);
+            console.log('✅ 選項菜單已添加到頁面');
+            console.log('   位置:', buttonX, buttonY);
+            console.log('   容器ID:', buttonContainer.id);
+            
+            // 暫存選擇數據供後續使用
+            window.currentSelectionData = {
+                selection: selection,
+                imageBase64: imageBase64
+            };
+            console.log('✅ 選擇數據已暫存到 window.currentSelectionData');
+        }
+        
+        // 移除選擇按鈕
+        function removeSelectionButtons() {
+            const existingButtons = document.getElementById('selection-buttons');
+            if (existingButtons) {
+                existingButtons.remove();
+                console.log('Selection buttons removed');
+            }
+            // ⚠️ 重要：清除暫存的選擇數據，防止誤操作
+            window.currentSelectionData = null;
+            console.log('✅ 選擇數據已清除');
+        }
+        
+        // 清除選擇區域
+        function clearSelection() {
+            isSelecting = false;
+            isReadyToSelect = false;  // 重置準備標志
+            selectionStart = {x: 0, y: 0};
+            selectionEnd = {x: 0, y: 0};
+            currentSelection = null;
+            window.currentSelectionData = null;
+            redrawCanvas();
+            console.log('Selection cleared');
+        }
+        
+        // ===== 圈選功能實現 =====
+        function startSelection(e) {
+            if (!canvas || !ctx) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // 確保繪圖模式關閉，開始選擇
+            isDrawing = false;
+            isSelecting = true;
+            selectionStart = {x: x, y: y};
+
+            // 更新游標為圈選狀態
+            updateCanvasCursor();
+            selectionEnd = {x: x, y: y};
+            
+            console.log('🔲 開始圈選:', selectionStart);
+        }
+        
+        function updateSelection(e) {
+            if (!isSelecting) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            selectionEnd = {x: x, y: y};
+            redrawCanvas();
+            
+            // 繪製選擇矩形
+            const selection = {
+                x: Math.min(selectionStart.x, selectionEnd.x),
+                y: Math.min(selectionStart.y, selectionEnd.y),
+                width: Math.abs(selectionEnd.x - selectionStart.x),
+                height: Math.abs(selectionEnd.y - selectionStart.y)
+            };
+            
+            ctx.save();
+            ctx.strokeStyle = '#3498db';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.strokeRect(selection.x, selection.y, selection.width, selection.height);
+            ctx.restore();
+        }
+        
+        function endSelection(e) {
+            console.log('🔍 endSelection 被調用, isSelecting:', isSelecting);
+            
+            if (!isSelecting) {
+                console.log('⚠️  不在圈選模式，退出');
+                return;
+            }
+            
+            // ⚠️ 重要：更新最終位置（防止 mousemove 未觸發）
+            const rect = canvas.getBoundingClientRect();
+            const finalX = e.clientX - rect.left;
+            const finalY = e.clientY - rect.top;
+            selectionEnd = {x: finalX, y: finalY};
+            
+            console.log('🔲 圈選起點:', selectionStart);
+            console.log('🔲 圈選終點:', selectionEnd);
+            
+            const selection = {
+                x: Math.min(selectionStart.x, selectionEnd.x),
+                y: Math.min(selectionStart.y, selectionEnd.y),
+                width: Math.abs(selectionEnd.x - selectionStart.x),
+                height: Math.abs(selectionEnd.y - selectionStart.y)
+            };
+            
+            console.log('🔲 完成圈選:', selection);
+            console.log('   區域尺寸:', selection.width, 'x', selection.height);
+            
+            if (selection.width > 10 && selection.height > 10) {
+                if (isMoving) {
+                    // 移動模式：顯示選取模式選擇對話框
+                    console.log('🖐️ 移動模式圈選完成，顯示模式選擇');
+                    showSelectionModeDialog(selection);
+                } else {
+                    // 原有圈選功能
+                    console.log('✅ 區域有效，調用 processSelection');
+                    processSelection(selection);
+                }
+                
+                // ⚠️ 圈選完成後，退出圈選模式並恢復按鈕狀態
+                isReadyToSelect = false;
+                const selectAreaBtn = document.getElementById('select-area-btn');
+                if (selectAreaBtn) {
+                    selectAreaBtn.style.background = '#3498db';  // 恢復原色
+                }
+                console.log('✅ 圈選完成，已自動退出圈選模式');
+            } else {
+                console.log('❌ 選擇區域太小，已忽略');
+                console.log('   🐛 調試信息:');
+                console.log('      起點 (selectionStart):', selectionStart);
+                console.log('      終點 (selectionEnd):', selectionEnd);
+                console.log('      計算寬度:', Math.abs(selectionEnd.x - selectionStart.x));
+                console.log('      計算高度:', Math.abs(selectionEnd.y - selectionStart.y));
+                addChatMessage('AI', `⚠️  **選擇區域太小** (${selection.width}×${selection.height} 像素)\n\n請圈選更大的區域（至少 10×10 像素）。\n\n💡 提示：按住鼠標左鍵並**緩慢拖動**到目標位置後再松開。`);
+            }
+            
+            isSelecting = false;
+            redrawCanvas();
+        }
+        
+        // 處理圈選結果 - 顯示浮動選項菜單
+        function processSelection(selection) {
+            console.log('🎯 processSelection 被調用');
+            console.log('   選擇區域:', selection);
+            
+            // 提取選中區域的圖片數據
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = selection.width;
+            tempCanvas.height = selection.height;
+            
+            // 創建白色背景
+            tempCtx.fillStyle = 'white';
+            tempCtx.fillRect(0, 0, selection.width, selection.height);
+            
+            // 複製選中區域
+            tempCtx.drawImage(canvas, 
+                selection.x, selection.y, selection.width, selection.height,
+                0, 0, selection.width, selection.height
+            );
+            
+            const imageBase64 = tempCanvas.toDataURL('image/png');
+            console.log('   圖片數據已提取, 大小:', imageBase64.length, '字節');
+            
+            // 顯示浮動選項菜單
+            console.log('   調用 showSelectionOptions...');
+            showSelectionOptions(selection, imageBase64);
+        }
+        
+        function updateCanvasCursor() {
+            const canvas = document.getElementById('drawing-canvas');
+            if (!canvas) return;
+
+            if (isReadyToSelect || isSelecting) {
+                canvas.style.cursor = 'crosshair';
+                canvas.title = '拖拽選擇區域';
+            } else if (isMoving) {
+                if (selectedItems.length > 0) {
+                    canvas.style.cursor = 'move';
+                    canvas.title = '拖拽移動選中內容';
+                } else {
+                    canvas.style.cursor = 'crosshair';
+                    canvas.title = '圈選要移動的內容';
+                }
+            } else {
+                canvas.style.cursor = 'crosshair';
+                canvas.title = '點擊拖拽繪畫，按住Shift拖拽圈選區域';
+            }
+        }
+        
+        // ===== 統一畫布事件處理 =====
+        function handleCanvasMouseDown(e) {
+            console.log('🖱️  mousedown, isSelecting:', isSelecting, ', isReadyToSelect:', isReadyToSelect, ', isMoving:', isMoving, ', selectedItems:', selectedItems.length);
+
+            // 如果準備圈選，則啟動圈選
+            if (isReadyToSelect) {
+                console.log('🔲 啟動圈選');
+                isReadyToSelect = false;  // 清除準備標志
+                startSelection(e);
+            } else if (isSelecting) {
+                // 已經在圈選中（理論上不會到這裡）
+                console.log('🔲 繼續圈選');
+                startSelection(e);
+            } else if (isMoving) {
+                // 移動模式
+                if (selectedItems.length > 0) {
+                    // 有選中項目：開始拖拽
+                    console.log('🖐️ 開始移動拖拽已選中的內容');
+                    isDragging = true;
+                    const rect = canvas.getBoundingClientRect();
+                    moveStartPoint = {
+                        x: e.clientX - rect.left,
+                        y: e.clientY - rect.top
+                    };
+                } else {
+                    // 沒有選中項目：開始圈選
+                    console.log('🔲 移動模式：啟動圈選來選擇要移動的內容');
+                    startSelection(e);
+                }
+            } else {
+                console.log('✏️  啟動繪圖');
+                startDrawing(e);
+            }
+        }
+        
+        function handleCanvasMouseMove(e) {
+            if (isDrawing) {
+                draw(e);
+            } else if (isSelecting) {
+                // 添加日志確認 mousemove 被觸發
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                console.log('🔄 mousemove (圈選中):', Math.round(x), ',', Math.round(y));
+                updateSelection(e);
+            } else if (isDragging) {
+                // 移動模式：拖拽選中內容
+                const rect = canvas.getBoundingClientRect();
+                const currentX = e.clientX - rect.left;
+                const currentY = e.clientY - rect.top;
+                
+                const deltaX = currentX - moveStartPoint.x;
+                const deltaY = currentY - moveStartPoint.y;
+                
+                console.log('🔄 移動拖拽: Δx=' + deltaX.toFixed(1) + ', Δy=' + deltaY.toFixed(1));
+                
+                // 移動所有選中項目
+                moveSelectedItems(deltaX, deltaY);
+                
+                // 更新起始點為當前位置
+                moveStartPoint.x = currentX;
+                moveStartPoint.y = currentY;
+            }
+        }
+        
+        function handleCanvasMouseUp(e) {
+            console.log('🖱️  mouseup, isDrawing:', isDrawing, ', isSelecting:', isSelecting, ', isReadyToSelect:', isReadyToSelect);
+            
+            if (isDrawing) {
+                console.log('✏️  停止繪圖');
+                stopDrawing(e);
+            } else if (isSelecting) {
+                console.log('🔲 結束圈選');
+                endSelection(e);
+            } else if (isDragging) {
+                // 移動模式：結束拖拽
+                console.log('🖐️ 結束移動拖拽');
+                isDragging = false;
+                addChatMessage('AI', '✅ **移動完成**');
+                updateCanvasCursor(); // 更新游標狀態
+            } else if (isReadyToSelect) {
+                // 如果準備圈選但沒有真正開始（例如只是移動鼠標），取消準備狀態
+                console.log('⚠️  取消圈選準備（未開始圈選就 mouseup）');
+                isReadyToSelect = false;
+            } else {
+                console.log('⚠️  既不在繪圖也不在圈選狀態');
+            }
+        }
+        
+        function handleCanvasMouseOut(e) {
+            if (isDrawing) {
+                stopDrawing(e);
+            }
+        }
+        
+
+        
+        // 處理數學公式轉換
+        async function processMathFormula(selectionData) {
+            // ⚠️ 安全檢查：確保 selectionData 存在且有效
+            if (!selectionData || !selectionData.imageBase64) {
+                console.error('❌ processMathFormula: selectionData 無效或為空');
+                addChatMessage('AI', '❌ **處理失敗**\n\n選擇數據無效，請重新圈選。');
+                return;
+            }
+            
+            addChatMessage('AI', '🧮 正在分析數學公式...');
+            
+            try {
+                // 調用專門的數學公式分析API
+                const response = await fetch('/api/analyze-math', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        image_data: selectionData.imageBase64
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success && result.latex) {
+                    console.log('✅ AI返回LaTeX:', result.latex);
+                    
+                    // 先清理LaTeX格式以供顯示
+                    let displayLatex = result.latex.trim();
+                    displayLatex = displayLatex.replace(/\\\[/g, '').replace(/\\\]/g, '');
+                    displayLatex = displayLatex.replace(/\\\(/g, '').replace(/\\\)/g, '');
+                    displayLatex = displayLatex.replace(/^\$\$/, '').replace(/\$\$$/, '');
+                    displayLatex = displayLatex.replace(/^\$/, '').replace(/\$$/, '');
+                    displayLatex = displayLatex.trim();
+                    
+                    // ⚠️ 檢查清理後的LaTeX是否為空（避免誤刪畫布內容）
+                    if (!displayLatex || displayLatex.length === 0) {
+                        console.error('❌ AI返回空LaTeX，拒絕處理');
+                        addChatMessage('AI', '❌ **識別失敗**\n\n無法識別圈選區域的數學公式。\n可能原因：\n• 圈選了已經轉換過的公式（請圈選手寫內容）\n• AI識別失敗\n• 圖片不清晰');
+                        isSelecting = false;
+                        isReadyToSelect = false;
+                        return;
+                    }
+                    
+                    addChatMessage('AI', `🧮 **識別成功！**\n\n📐 LaTeX: \`${displayLatex}\`\n🎯 信心度: ${Math.round((result.confidence || 0) * 100)}%`);
+                    
+                    console.log('🎨 開始渲染公式...');
+                    // 使用KaTeX渲染公式
+                    renderMathFormula(result.latex, selectionData.selection);
+                } else if (result.success && result.analysis) {
+                    // 如果沒有LaTeX但有分析結果，嘗試提取
+                    const latex = extractLatexFromResponse(result.analysis);
+                    
+                    if (latex) {
+                        addChatMessage('AI', `🧮 **分析結果：**\n${result.analysis}\n\n📐 提取的LaTeX: \`${latex}\``);
+                        renderMathFormula(latex, selectionData.selection);
+                    } else {
+                        addChatMessage('AI', `📝 **分析結果：**\n${result.analysis}\n\n⚠️ 未能識別出標準數學公式格式。`);
+                    }
+                } else {
+                    addChatMessage('AI', `❌ 公式分析失敗：${result.error || '請確保選中區域包含清晰的數學公式。'}`);
+                }
+            } catch (error) {
+                console.error('Math formula processing error:', error);
+                addChatMessage('AI', '❌ 連接分析服務失敗，請稍後再試。');
+            }
+            
+            // 清除選擇數據
+            window.currentSelectionData = null;
+        }
+        
+        // 從AI回應中提取LaTeX公式
+        function extractLatexFromResponse(response) {
+            // 尋找LaTeX格式的公式（$...$ 或 $$...$$）
+            const latexPatterns = [
+                /\$\$([^$]+)\$\$/g,  // $$...$$
+                /\$([^$]+)\$/g,      // $...$
+                /\\begin\{[^}]+\}.*?\\end\{[^}]+\}/gs,  // \begin{...}...\end{...}
+            ];
+            
+            for (const pattern of latexPatterns) {
+                const matches = response.match(pattern);
+                if (matches && matches.length > 0) {
+                    return matches[0];
+                }
+            }
+            
+            // 如果沒有找到標準LaTeX格式，嘗試提取可能的數學表達式
+            const mathKeywords = ['equation', 'formula', 'expression', '公式', '方程'];
+            if (mathKeywords.some(keyword => response.toLowerCase().includes(keyword))) {
+                // 返回簡化的LaTeX格式
+                return response.replace(/[^\w\s\+\-\*\/\=\(\)\^\{\}]/g, '');
+            }
+            
+            return null;
+        }
+        
+        // 渲染數學公式並替換到畫布 - 完全重寫版本
+        function renderMathFormula(latex, selection) {
+            console.log('🎯 renderMathFormula 開始執行');
+            console.log('   輸入LaTeX:', latex);
+            console.log('   選擇區域:', selection);
+            
+            // 步驟1: 清理LaTeX格式
+            let cleanLatex = latex.trim()
+                .replace(/\\\[/g, '').replace(/\\\]/g, '')  // 移除 \[ \]
+                .replace(/\\\(/g, '').replace(/\\\)/g, '')  // 移除 \( \)
+                .replace(/^\$\$/, '').replace(/\$\$$/, '')  // 移除 $$..$$
+                .replace(/^\$/, '').replace(/\$$/, '')      // 移除 $..$
+                .trim();
+            
+            console.log('   清理後LaTeX:', cleanLatex);
+            
+            // 檢查清理後的LaTeX是否為空
+            if (!cleanLatex || cleanLatex.length === 0) {
+                console.error('❌ LaTeX內容為空，無法渲染');
+                addChatMessage('AI', '❌ **識別失敗**\n\n無法識別圈選區域的數學公式。\n可能原因：\n• 圈選了已經轉換過的公式（請圈選手寫內容）\n• AI識別失敗\n• 圖片不清晰');
+                isSelecting = false;
+                isReadyToSelect = false;
+                return;
+            }
+            
+            // 步驟2: 使用KaTeX渲染LaTeX為HTML
+            // ⚠️ 新規則：容器大小 = 圈選大小（保證完全覆蓋）
+            const container = document.createElement('div');
+            container.style.cssText = `
+                position: absolute;
+                left: -9999px;
+                width: ${selection.width}px;
+                height: ${selection.height}px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: white;
+                padding: 0;
+                box-sizing: border-box;
+                overflow: hidden;
+            `;
+            document.body.appendChild(container);
+            
+            console.log('📝 渲染設定: 容器大小 =', selection.width, 'x', selection.height, 'px (固定)');
+            
+            try {
+                katex.render(cleanLatex, container, { throwOnError: false, displayMode: true });
+                console.log('✅ KaTeX渲染成功');
+                
+                // 步驟3: 使用html2canvas將HTML轉為圖片（固定尺寸）
+                html2canvas(container, { 
+                    backgroundColor: 'white', 
+                    scale: 2,
+                    width: selection.width,
+                    height: selection.height
+                }).then(canvas2 => {
+                    document.body.removeChild(container);
+                    
+                    const img = new Image();
+                    img.onload = () => {
+                        console.log('✅ 圖片載入成功，尺寸:', img.width, 'x', img.height);
+                        
+                        // 步驟4: 直接使用圈選範圍（1:1 對應，保證完全覆蓋）
+                        const x = selection.x;
+                        const y = selection.y;
+                        const w = selection.width;
+                        const h = selection.height;
+                        
+                        console.log('📐 繪製參數:');
+                        console.log('   圈選範圍:', selection);
+                        console.log('   渲染圖片:', {width: img.width, height: img.height});
+                        console.log('   最終尺寸:', {x, y, w, h});
+                        console.log('   ✅ 1:1 對應，保證完全覆蓋');
+                        
+                        // 步驟5: 先從strokes中移除選擇區域內的筆畫
+                        // ⚠️ 新規則：只刪除「有重疊」的內容，不管橡皮擦
+                        const newStrokes = [];
+                        
+                        // 輔助函數：計算兩個矩形的重疊面積百分比
+                        function getOverlapRatio(rect1, rect2) {
+                            const x_overlap = Math.max(0, Math.min(rect1.x + rect1.width, rect2.x + rect2.width) - Math.max(rect1.x, rect2.x));
+                            const y_overlap = Math.max(0, Math.min(rect1.y + rect1.height, rect2.y + rect2.height) - Math.max(rect1.y, rect2.y));
+                            const overlapArea = x_overlap * y_overlap;
+                            const rect1Area = rect1.width * rect1.height;
+                            return rect1Area > 0 ? (overlapArea / rect1Area) : 0;
+                        }
+                        
+                        for (let i = 0; i < strokes.length; i++) {
+                            const stroke = strokes[i];
+                            let keepStroke = true;
+                            
+                            if (stroke.tool === 'image') {
+                                // 圖片筆畫：使用實際繪製區域（不使用原圈選區）
+                                // 只要「實際公式圖片」有 50% 以上在選區內，就刪除
+                                const imageArea = {
+                                    x: stroke.x,
+                                    y: stroke.y,
+                                    width: stroke.width,
+                                    height: stroke.height
+                                };
+                                
+                                const overlapRatio = getOverlapRatio(imageArea, selection);
+                                
+                                if (overlapRatio > 0.5) {
+                                    keepStroke = false;
+                                    console.log('🗑️  移除重疊的公式:', stroke.id || 'unknown');
+                                    console.log('   公式位置:', `${Math.round(imageArea.x)},${Math.round(imageArea.y)} ${Math.round(imageArea.width)}x${Math.round(imageArea.height)}`);
+                                    console.log('   新選區:', `${Math.round(selection.x)},${Math.round(selection.y)} ${Math.round(selection.width)}x${Math.round(selection.height)}`);
+                                    console.log('   重疊比例:', (overlapRatio * 100).toFixed(1) + '%');
+                                } else {
+                                    console.log('✅ 保留公式:', stroke.id || 'unknown', `(重疊 ${(overlapRatio * 100).toFixed(1)}% < 50%)`);
+                                }
+                            } else if (stroke.points) {
+                                // 普通筆畫：使用 50% 門檻（與圖片筆畫一致）
+                                const pointsInSelection = stroke.points.filter(p => 
+                                    p.x >= selection.x && p.x <= selection.x + selection.width &&
+                                    p.y >= selection.y && p.y <= selection.y + selection.height
+                                ).length;
+                                
+                                const overlapRatio = pointsInSelection / stroke.points.length;
+                                
+                                if (overlapRatio > 0.5) {  // ← 50% 以上就刪除
+                                    keepStroke = false;
+                                    console.log('🗑️  移除重疊的筆畫:', Math.round(overlapRatio * 100) + '% (', pointsInSelection, '/', stroke.points.length, ')');
+                                } else if (pointsInSelection > 0) {
+                                    console.log('✅ 保留筆畫:', Math.round(overlapRatio * 100) + '% < 50% (', pointsInSelection, '/', stroke.points.length, ')');
+                                }
+                            }
+                            
+                            if (keepStroke) {
+                                newStrokes.push(stroke);
+                            }
+                        }
+                        
+                        // 更新strokes數組
+                        strokes.length = 0;
+                        strokes.push(...newStrokes);
+                        
+                        console.log('🗑️  已移除選擇區域內的筆畫，剩餘:', strokes.length);
+                        
+                        // 步驟6: 添加公式圖片作為新筆畫（帶唯一ID和原始資料）
+                        const formulaId = 'formula_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                        const formulaStroke = {
+                            tool: 'image',
+                            image: img,
+                            x: x,
+                            y: y,
+                            width: w,
+                            height: h,
+                            // 添加公式特有屬性
+                            id: formulaId,
+                            type: 'math_formula',
+                            originalLatex: cleanLatex,
+                            selectionArea: {
+                                x: selection.x,
+                                y: selection.y,
+                                width: selection.width,
+                                height: selection.height
+                            },
+                            timestamp: Date.now(),
+                            editable: true  // 標記為可獨立編輯
+                        };
+                        
+                        strokes.push(formulaStroke);
+                        
+                        // 添加到公式管理系統
+                        formulaObjects.set(formulaId, {
+                            stroke: formulaStroke,
+                            metadata: {
+                                createdAt: Date.now(),
+                                originalSelection: selection,
+                                replacedStrokes: strokes.length - newStrokes.length,  // 記錄替換了多少筆畫
+                                layer: layerOrder.length
+                            }
+                        });
+                        layerOrder.push(formulaId);
+                        
+                        console.log('✅ 公式已添加為可編輯筆畫:', formulaId);
+                        console.log('📋 當前公式數量:', formulaObjects.size);
+                        
+                        console.log('✅ 公式已添加為筆畫，總數:', strokes.length);
+                        
+                        // 步驟7: 重繪整個畫布
+                        redrawCanvas();
+                        console.log('✅ 畫布已重繪');
+                        
+                        // 步驟8: 清除選擇狀態
+                        isSelecting = false;
+                        isReadyToSelect = false;
+                        selectionStart = {x: 0, y: 0};
+                        selectionEnd = {x: 0, y: 0};
+                        currentSelection = null;
+                        window.currentSelectionData = null;
+                        
+                        // 步驟9: 顯示成功訊息
+                        addChatMessage('AI', `✅ **數學公式轉換完成！**\n\n📐 LaTeX: \`${cleanLatex}\`\n🎨 已替換到畫布上`);
+                        console.log('🎉 renderMathFormula 完成！');
+                    };
+                    img.src = canvas2.toDataURL();
+                }).catch(err => {
+                    document.body.removeChild(container);
+                    console.error('❌ html2canvas錯誤:', err);
+                    addChatMessage('AI', '❌ 渲染失敗');
+                });
+                
+            } catch (err) {
+                document.body.removeChild(container);
+                console.error('❌ KaTeX錯誤:', err);
+                addChatMessage('AI', `❌ LaTeX語法錯誤: ${err.message}`);
+            }
+        }
+        
+        // 處理心智圖功能（暫時簡化實現）
+        function processMindMap(selectionData) {
+            addChatMessage('AI', '🗺️ 心智圖功能正在開發中...\n\n當前選中區域將在未來版本中支持轉換為可編輯的心智圖。');
+            // 清除選擇數據
+            window.currentSelectionData = null;
+        }
+        
+        // ===== 全局變量聲明 =====
+        let canvas = null;
+        let ctx = null;
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        let currentTool = 'pen';
+        let currentColor = '#2c3e50';
+        let currentSize = 5;
+        let strokes = []; // 記錄所有筆畫數據
+        let currentStroke = null; // 當前正在繪製的筆畫
+        let images = []; // 記錄所有插入的圖片數據
+        
+        // 公式管理系統
+        let formulaObjects = new Map(); // 存儲所有渲染的公式對象 {id: {stroke, metadata}}
+        let layerOrder = []; // 記錄所有對象的層次順序
+        
+        // 公式管理函數
+        function getFormulaAtPoint(x, y) {
+            // 從最上層開始檢查（最後添加的優先）
+            for (let i = layerOrder.length - 1; i >= 0; i--) {
+                const formulaId = layerOrder[i];
+                const formulaObj = formulaObjects.get(formulaId);
+                if (formulaObj && formulaObj.stroke) {
+                    const stroke = formulaObj.stroke;
+                    if (x >= stroke.x && x <= stroke.x + stroke.width &&
+                        y >= stroke.y && y <= stroke.y + stroke.height) {
+                        return {id: formulaId, ...formulaObj};
+                    }
+                }
+            }
+            return null;
+        }
+        
+        function removeFormula(formulaId) {
+            if (formulaObjects.has(formulaId)) {
+                // 從strokes中移除
+                const formulaObj = formulaObjects.get(formulaId);
+                const strokeIndex = strokes.indexOf(formulaObj.stroke);
+                if (strokeIndex > -1) {
+                    strokes.splice(strokeIndex, 1);
+                }
+                
+                // 從管理系統中移除
+                formulaObjects.delete(formulaId);
+                const layerIndex = layerOrder.indexOf(formulaId);
+                if (layerIndex > -1) {
+                    layerOrder.splice(layerIndex, 1);
+                }
+                
+                redrawCanvas();
+                console.log('🗑️  已移除公式:', formulaId);
+                return true;
+            }
+            return false;
+        }
+        
+        // 圈選功能變量
+        let isSelecting = false; // 是否處於圈選狀態
+        let isReadyToSelect = false; // 準備圈選（點擊按鈕後，等待用戶在畫布上點擊）
+        let selectionStart = {x: 0, y: 0};
+        let selectionEnd = {x: 0, y: 0};
+        let currentSelection = null;
+        
+        // 選取操作組狀態管理
+        let selectionOperation = null; // 'select', 'move', null
+        
+        // 按鈕變量（全局作用域）
+        let selectAreaBtn = null;
+        let moveBtn = null;
+        let scaleBtn = null;
+        let deleteBtn = null;
+        
+        // 移動功能變量
+        let isMoving = false; // 移動模式狀態
+        let isDragging = false; // 是否正在拖拽移動
+        let moveStartPoint = {x: 0, y: 0}; // 移動起始點
+        let selectedItems = []; // 選中的項目陣列
+        
+        // ===== 選取操作組管理函數 =====
+        function setSelectionOperation(op) {
+            // 先取消當前操作
+            if (selectionOperation === 'select') {
+                isReadyToSelect = false;
+                selectAreaBtn.style.background = '#3498db';
+                addChatMessage('AI', '❌ **已取消圈選模式**');
+            } else if (selectionOperation === 'move') {
+                isMoving = false;
+                selectedItems = []; // 清空選中項目
+                moveBtn.style.background = '#9b59b6';
+                addChatMessage('AI', '❌ **已取消移動模式**');
+                updateCanvasCursor(); // 更新游標
+            } else if (selectionOperation === 'scale') {
+                isScaling = false;
+                scaleBtn.style.background = '#f39c12';
+                addChatMessage('AI', '❌ **已取消縮放模式**');
+            } else if (selectionOperation === 'delete') {
+                isDeleting = false;
+                deleteBtn.style.background = '#e74c3c';
+                addChatMessage('AI', '❌ **已取消刪除模式**');
+            }
+            
+            // 設置新操作
+            selectionOperation = op;
+            
+            if (op === 'select') {
+                isReadyToSelect = true;
+                selectAreaBtn.style.background = '#e74c3c';
+                addChatMessage('AI', '🔲 **圈選模式已激活**\n\n請在畫布上拖動滑鼠圈選區域。');
+            } else if (op === 'move') {
+                isMoving = true;
+                moveBtn.style.background = '#e74c3c';
+                addChatMessage('AI', '🖐️ **移動模式已激活**\n\n請圈選要移動的內容，然後拖拽移動。');
+                updateCanvasCursor(); // 更新游標
+            } else if (op === 'scale') {
+                isScaling = true;
+                scaleBtn.style.background = '#e74c3c';
+                addChatMessage('AI', '🔍 **縮放模式已激活**\n\n請圈選要縮放的區域，然後拖拽縮放。');
+            } else if (op === 'delete') {
+                isDeleting = true;
+                deleteBtn.style.background = '#e74c3c';
+                addChatMessage('AI', '🗑️ **刪除模式已激活**\n\n請圈選要刪除的區域，然後拖拽刪除。');
+            }
+        }
+        
+        // ===== 全局繪圖函數 =====
+            
+            // 移動選中項目函數
+            function moveSelectedItems(deltaX, deltaY) {
+                console.log('🔄 移動項目: Δx=' + deltaX + ', Δy=' + deltaY);
+
+                selectedItems.forEach(item => {
+                    // 移動圖片類內容
+                    if (item.tool === 'image') {
+                        // 更新selectedItems中的數據
+                        item.x += deltaX;
+                        item.y += deltaY;
+                        // 更新原始images數組中的數據
+                        if (item.index >= 0 && item.index < images.length) {
+                            images[item.index].x = item.x;
+                            images[item.index].y = item.y;
+                        }
+                        console.log('  移動圖片:', item.x.toFixed(1), item.y.toFixed(1));
+                    }
+                    // 移動筆畫類內容
+                    else if (item.points) {
+                        // 更新selectedItems中的數據
+                        item.points.forEach(point => {
+                            point.x += deltaX;
+                            point.y += deltaY;
+                        });
+                        // 更新原始strokes數組中的數據
+                        if (item.index >= 0 && item.index < strokes.length) {
+                            strokes[item.index].points = item.points;
+                        }
+                        console.log('  移動筆畫:', item.points.length + '點');
+                    }
+                });
+
+                // 立即重繪畫布
+                redrawCanvas();
+            }
+            
+            // 獲取選區中的項目 (圖片和筆畫)
+            function getItemsInSelection(selection) {
+                const items = [];
+                const overlapThreshold = 0.3; // 30% 重疊度阈值
+
+                // 檢查所有圖片
+                images.forEach(image => {
+                    const overlapRatio = getOverlapRatio(
+                        {x: image.x, y: image.y, width: image.width, height: image.height},
+                        selection
+                    );
+                    if (overlapRatio >= overlapThreshold) {
+                        items.push({
+                            tool: 'image',
+                            index: images.indexOf(image),
+                            x: image.x,
+                            y: image.y,
+                            width: image.width,
+                            height: image.height,
+                            imageData: image.imageData
+                        });
+                    }
+                });
+
+                // 檢查所有筆畫
+                strokes.forEach((stroke, strokeIndex) => {
+                    // 確保stroke有points屬性且不為空
+                    if (!stroke.points || !Array.isArray(stroke.points) || stroke.points.length === 0) {
+                        return; // 跳過無效的stroke
+                    }
+
+                    // 計算筆畫的邊界框
+                    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                    stroke.points.forEach(point => {
+                        minX = Math.min(minX, point.x);
+                        minY = Math.min(minY, point.y);
+                        maxX = Math.max(maxX, point.x);
+                        maxY = Math.max(maxY, point.y);
+                    });
+
+                    if (minX !== Infinity) {
+                        const strokeBounds = {
+                            x: minX,
+                            y: minY,
+                            width: maxX - minX,
+                            height: maxY - minY
+                        };
+
+                        const overlapRatio = getOverlapRatio(strokeBounds, selection);
+                        if (overlapRatio >= overlapThreshold) {
+                            items.push({
+                                tool: 'stroke',
+                                index: strokeIndex,
+                                points: stroke.points,
+                                color: stroke.color,
+                                size: stroke.size,
+                                bounds: strokeBounds
+                            });
+                        }
+                    }
+                });
+
+                return items;
+            }
+
+            // 計算兩個矩形重疊比例的工具函數
+            function getOverlapRatio(rect1, rect2) {
+                const overlapX = Math.max(0, Math.min(rect1.x + rect1.width, rect2.x + rect2.width) - Math.max(rect1.x, rect2.x));
+                const overlapY = Math.max(0, Math.min(rect1.y + rect1.height, rect2.y + rect2.height) - Math.max(rect1.y, rect2.y));
+                const overlapArea = overlapX * overlapY;
+
+                const rect1Area = rect1.width * rect1.height;
+                const rect2Area = rect2.width * rect2.height;
+
+                // 返回相對於較小矩形的重疊比例
+                const smallerArea = Math.min(rect1Area, rect2Area);
+                return smallerArea > 0 ? overlapArea / smallerArea : 0;
+            }
+
+            // 繪圖函數 (純粹畫畫)
+            function draw(e) {
+                if (!isDrawing) return;
+
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                ctx.globalCompositeOperation = currentTool === 'eraser' ? 'destination-out' : 'source-over';
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+                ctx.lineWidth = currentSize;
+                ctx.strokeStyle = currentColor;
+                
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+                
+                lastX = x;
+                lastY = y;
+                
+                // 添加點到當前筆畫
+                if (currentStroke) {
+                    currentStroke.points.push({x: x, y: y});
+                }
+            }
+            
+        // 開始繪圖
+            function startDrawing(e) {
+                if (!canvas || !ctx) return; // 檢查初始化
+                
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                // 確保選擇模式關閉，開始繪圖
+                isSelecting = false;
+                isDrawing = true;
+                lastX = x;
+                lastY = y;
+                
+                // 開始新筆畫
+                currentStroke = {
+                    tool: currentTool,
+                    color: currentColor,
+                    size: currentSize,
+                    points: [{x: lastX, y: lastY}]
+                };
+            }
+            
+            // 停止繪圖
+            function stopDrawing() {
+                if (!canvas || !ctx) return;
+                
+                if (isDrawing && currentStroke) {
+                    strokes.push(currentStroke);
+                    currentStroke = null;
+                }
+                isDrawing = false;
+            }
+            
+        function initializeApp() {
+            try {
+                console.log('Starting app initialization...');
+                
+                // 獲取畫布和上下文
+                canvas = document.getElementById('drawing-canvas');
+                if (!canvas) {
+                    console.error('Canvas element not found!');
+                    return;
+                }
+                ctx = canvas.getContext('2d');
+                
+                if (!ctx) {
+                    console.error('Failed to get canvas context!');
+                    return;
+                }
+            
+            // 設定畫布大小
+            function resizeCanvas() {
+                if (!canvas) return;
+                const container = canvas.parentElement;
+                canvas.width = container.clientWidth - 4; // 減去邊框
+                canvas.height = container.clientHeight - 4;
+                console.log('Canvas resized:', canvas.width, 'x', canvas.height);
+            }
+            
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+
+            
+            // 綁定畫布事件 - 統一事件處理
+            canvas.addEventListener('mousedown', handleCanvasMouseDown);
+            canvas.addEventListener('mousemove', handleCanvasMouseMove);
+            canvas.addEventListener('mouseup', handleCanvasMouseUp);
+            canvas.addEventListener('mouseout', handleCanvasMouseUp);
+            
+            // 觸控事件支援
+            canvas.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const mouseEvent = new MouseEvent('mousedown', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+                canvas.dispatchEvent(mouseEvent);
+            });
+            
+            canvas.addEventListener('touchmove', function(e) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const mouseEvent = new MouseEvent('mousemove', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+                canvas.dispatchEvent(mouseEvent);
+            });
+            
+            canvas.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                canvas.dispatchEvent(new MouseEvent('mouseup', {}));
+            });
+            
+            // 圈選按鈕 - 行為類似工具切換
+            selectAreaBtn = document.getElementById('select-area-btn');
+            if (selectAreaBtn) {
+                selectAreaBtn.addEventListener('click', function() {
+                    if (selectionOperation === 'select') {
+                        setSelectionOperation(null); // 取消圈選
+                    } else {
+                        setSelectionOperation('select'); // 激活圈選
+                    }
+                });
+            }
+            
+            // 工具按鈕
+            document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // 取消圈選模式（如果激活）
+                    if (isReadyToSelect && selectAreaBtn) {
+                        isReadyToSelect = false;
+                        selectAreaBtn.style.background = '#3498db';  // 恢復原色
+                        console.log('❌ 切換工具，取消圈選模式');
+                    }
+                    
+                    // 工具切換
+                    document.querySelectorAll('.tool-btn[data-tool]').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentTool = this.dataset.tool;
+                    console.log('Tool changed to:', currentTool);
+                });
+            });
+            
+            // 顏色選擇器
+            const colorPicker = document.getElementById('color-picker');
+            if (colorPicker) {
+                colorPicker.addEventListener('change', function() {
+                    currentColor = this.value;
+                    console.log('Color changed to:', currentColor);
+                });
+            } else {
+                console.warn('color-picker not found, skipping color picker setup');
+            }
+            
+            // 顏色樣本
+            document.querySelectorAll('.color-swatch').forEach(swatch => {
+                swatch.addEventListener('click', function() {
+                    currentColor = this.dataset.color;
+                    colorPicker.value = currentColor;
+                    console.log('Color changed to:', currentColor);
+                });
+            });
+            
+            // 筆刷大小
+            const sizeSlider = document.getElementById('size-slider');
+            const sizeDisplay = document.getElementById('size-display');
+            if (sizeSlider && sizeDisplay) {
+                sizeSlider.addEventListener('input', function() {
+                    currentSize = parseInt(this.value);
+                    sizeDisplay.textContent = currentSize + 'px';
+                });
+            } else {
+                console.warn('size-slider or size-display not found, skipping size setup');
+            }
+            
+            // 清除按鈕
+            const clearBtn = document.getElementById('clear-btn');
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function() {
+                    if (!canvas || !ctx) {
+                        console.error('Canvas not initialized');
+                        return;
+                    }
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    strokes = []; // 清空筆畫記錄
+                    console.log('Canvas cleared');
+                    addChatMessage('AI', '畫布已清除！請繼續您的創作。✨');
+                });
+            } else {
+                console.warn('clear-btn not found, skipping clear button setup');
+            }
+            
+            // 分析圖像按鈕
+            const analyzeBtn = document.getElementById('analyze-btn');
+            if (analyzeBtn) {
+                analyzeBtn.addEventListener('click', function() {
+                    analyzeDrawing();
+                });
+            } else {
+                console.warn('analyze-btn not found, skipping analyze button setup');
+            }
+            
+            // 儲存按鈕 (PNG下載)
+            const saveBtn = document.getElementById('save-btn');
+            if (saveBtn) {
+                saveBtn.addEventListener('click', function() {
+                try {
+                    if (!canvas || !ctx) {
+                        addChatMessage('AI', '❌ 畫布未初始化，無法保存。');
+                        return;
+                    }
+                    
+                    // 檢查畫布是否有內容
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const pixels = imageData.data;
+                    let hasContent = false;
+                    for (let i = 3; i < pixels.length; i += 4) {
+                        if (pixels[i] > 0) { // alpha channel
+                            hasContent = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!hasContent) {
+                        addChatMessage('AI', '📝 畫布是空的！請先畫一些內容再下載。');
+                        return;
+                    }
+                    
+                    const dataURL = canvas.toDataURL('image/png');
+                    const link = document.createElement('a');
+                    link.download = 'ui-corework-drawing-' + new Date().getTime() + '.png';
+                    link.href = dataURL;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    console.log('Drawing saved as PNG');
+                    addChatMessage('AI', '🎨 您的作品已下載為PNG檔案！');
+                } catch (error) {
+                    console.error('Save PNG error:', error);
+                    addChatMessage('AI', '❌ PNG下載失敗：' + error.message);
+                }
+                });
+            } else {
+                console.warn('save-btn not found, skipping PNG save setup');
+            }
+            
+            // 保存到項目按鈕
+            const saveToProjectBtn = document.getElementById('save-to-project-btn');
+            if (saveToProjectBtn) {
+                saveToProjectBtn.addEventListener('click', function() {
+                    saveDrawingToProject();
+                });
+            } else {
+                console.warn('save-to-project-btn not found, skipping save-to-project setup');
+            }
+            
+            // 聊天功能
+            const chatMessages = document.getElementById('chat-messages');
+            const chatInput = document.getElementById('chat-input');
+            const sendBtn = document.getElementById('send-btn');
+            if (!chatMessages || !chatInput || !sendBtn) {
+                console.warn('Chat elements missing, chat will be disabled');
+            }
+            
+
+            
+            function sendMessage() {
+                const message = chatInput.value.trim();
+                if (!message) return;
+                
+                addChatMessage('您', message);
+                chatInput.value = '';
+                
+                // 智能 AI 回應
+                setTimeout(() => {
+                    processAIMessage(message);
+                }, 800);
+            }
+            
+            // AI 訊息處理函數
+            function processAIMessage(userMessage) {
+                const message = userMessage.toLowerCase();
+                
+                // 檢查是否要求數學公式轉換
+                if (message.includes('math') || message.includes('公式') || message.includes('數學')) {
+                    if (window.currentSelectionData) {
+                        processMathFormula(window.currentSelectionData);
+                        return;
+                    } else {
+                        addChatMessage('AI', '請先使用選擇工具（🔲 選）在畫布上圈選包含數學公式的區域。');
+                        return;
+                    }
+                }
+                
+                // 檢查是否要求心智圖編輯
+                if (message.includes('mindmap') || message.includes('心智圖') || message.includes('腦圖')) {
+                    if (window.currentSelectionData) {
+                        processMindMap(window.currentSelectionData);
+                        return;
+                    } else {
+                        addChatMessage('AI', '請先使用選擇工具（🔲 選）在畫布上圈選要轉換為心智圖的區域。');
+                        return;
+                    }
+                }
+                
+                // 檢查是否要求分析圖像
+                if (message.includes('分析') || message.includes('辨識') || message.includes('識別') || message.includes('這是什麼')) {
+                    analyzeDrawing();
+                    return;
+                }
+                
+                // 檢查是否要求尋找範例
+                if (message.includes('範例') || message.includes('例子') || message.includes('參考') || message.includes('找') || message.includes('搜尋') || message.includes('上網')) {
+                    const keywords = extractKeywords(message);
+                    findDesignExamples(keywords);
+                    return;
+                }
+                
+                // 檢查是否要求教學
+                if (message.includes('教') || message.includes('怎麼') || message.includes('如何')) {
+                    provideDrawingTutorial(message);
+                    return;
+                }
+                
+                // 預設智能回應
+                const intelligentResponses = [
+                    '我看到您的訊息了！您可以：\n🎨 繼續在畫布上創作\n🔍 點擊「分析圖像」讓我分析您的作品\n📚 點擊「尋找範例」獲取設計靈感',
+                    '很棒的想法！如果您需要我分析當前的繪圖，請點擊「分析圖像」按鈕。',
+                    '您可以告訴我您想要畫什麼，我可以為您找到相關的設計範例和教學。',
+                    '試試看在畫布上畫一些形狀，然後讓我分析並提供改進建議！',
+                    '如果您想要特定的設計靈感，請告訴我您要設計什麼類型的界面元素。'
+                ];
+                const response = intelligentResponses[Math.floor(Math.random() * intelligentResponses.length)];
+                addChatMessage('AI', response);
+            }
+            
+            // 提取關鍵詞
+            function extractKeywords(message) {
+                const uiElements = ['按鈕', 'button', '表單', 'form', '導航', 'nav', '卡片', 'card', '圖標', 'icon', '菜單', 'menu'];
+                const found = uiElements.filter(keyword => message.includes(keyword));
+                return found.length > 0 ? found[0] : '界面設計';
+            }
+            
+            // 保存繪圖到項目
+            function saveDrawingToProject() {
+                if (!canvas || !ctx) {
+                    addChatMessage('AI', '❌ 畫布未初始化，無法保存。');
+                    return;
+                }
+                
+                // 檢查畫布是否有內容 (更可靠的方法)
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const pixels = imageData.data;
+                let hasContent = false;
+                for (let i = 3; i < pixels.length; i += 4) {
+                    if (pixels[i] > 0) { // alpha channel
+                        hasContent = true;
+                        break;
+                    }
+                }
+                
+                if (!hasContent) {
+                    addChatMessage('AI', '📝 畫布是空的！請先在畫布上畫一些內容再保存。');
+                    return;
+                }
+                
+                addChatMessage('AI', '💾 正在保存您的繪圖到項目...');
+                
+                try {
+                    // 準備繪圖數據
+                    const drawingData = {
+                        id: 'drawing_' + new Date().getTime(),
+                        title: 'Drawing ' + new Date().toLocaleString(),
+                        image_data: canvas.toDataURL('image/png'),
+                        description: '用戶繪製的設計草圖',
+                        tags: ['drawing', 'sketch', 'ui-design'],
+                        strokes: strokes || [],
+                        canvas: {
+                            width: canvas.width,
+                            height: canvas.height
+                        },
+                        metadata: {
+                            created_at: new Date().toISOString(),
+                            tools_used: ['pen', 'eraser']
+                        }
+                    };
+                    
+                    // 發送到後端
+                    fetch('/api/drawings', {
+                        method: 'POST',  
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(drawingData)
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('網路回應錯誤: ' + response.status);
+                        }
+                        return response.json();
+                    })
+                    .then(result => {
+                        if (result.id) {
+                            console.log('Drawing saved to project:', result);
+                            addChatMessage('AI', '✅ 您的繪圖已成功保存到項目！ID: ' + result.id);
+                        } else {
+                            console.error('Failed to save drawing:', result);
+                            addChatMessage('AI', '❌ 保存失敗：' + (result.message || result.detail || '未知錯誤'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error saving drawing:', error);
+                        addChatMessage('AI', '❌ 保存時發生錯誤：' + error.message);
+                    });
+                } catch (error) {
+                    console.error('Error preparing drawing data:', error);
+                    addChatMessage('AI', '❌ 準備資料時發生錯誤：' + error.message);
+                }
+            }
+            
+            // 分析繪圖 - 真實 AI 分析
+            function analyzeDrawing() {
+                if (!canvas || !ctx) {
+                    addChatMessage('AI', '❌ 畫布未初始化，無法分析。');
+                    return;
+                }
+                
+                addChatMessage('AI', '🔍 正在準備圖像進行 AI 分析...');
+                
+                // 獲取畫布數據
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const pixels = imageData.data;
+                
+                // 檢查是否有內容
+                let hasContent = false;
+                for (let i = 3; i < pixels.length; i += 4) {
+                    if (pixels[i] > 0) { // alpha channel
+                        hasContent = true;
+                        break;
+                    }
+                }
+                
+                if (!hasContent) {
+                    addChatMessage('AI', '📝 我看到畫布是空的！請先在畫布上畫一些內容，然後我就可以為您進行 AI 分析了。');
+                    return;
+                }
+                
+                // 將畫布轉換為圖片數據
+                // 先填充白色背景，避免透明背景影響 AI 識別
+                ctx.save();
+                ctx.globalCompositeOperation = 'destination-over';
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.restore();
+                
+                const imageDataURL = canvas.toDataURL('image/png');
+                
+                addChatMessage('AI', '🤖 正在調用 AI 模型分析您的繪圖...');
+                
+                // 發送到後端進行真實 AI 分析
+                fetch('/api/analyze-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        image_data: imageDataURL,
+                        prompt: "請分析這個UI設計草圖，識別其中的元素（如按鈕、表單、導航等），評估設計的優缺點，並提供具體的改進建議。"
+                    })
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        addChatMessage('AI', '🎨 **AI 圖像分析結果：**\n\n' + result.analysis);
+                        
+                        // 如果有相關範例推薦
+                        if (result.suggested_examples) {
+                            setTimeout(() => {
+                                addChatMessage('AI', '� 根據分析結果，讓我為您推薦相關的設計範例...');
+                                displayRelatedExamples(result.suggested_examples);
+                            }, 1500);
+                        }
+                    } else {
+                        addChatMessage('AI', '❌ 抱歉，AI 分析遇到了問題：' + (result.error || '未知錯誤') + '\n\n📝 目前提供基本分析作為替代...');
+                        performBasicAnalysis();
+                    }
+                })
+                .catch(error => {
+                    console.error('AI 分析錯誤:', error);
+                    addChatMessage('AI', '❌ 連接 AI 分析服務失敗，提供基本分析作為替代...');
+                    performBasicAnalysis();
+                });
+            }
+            
+            // 基本分析作為後備方案
+            function performBasicAnalysis() {
+                if (!canvas || !ctx) {
+                    addChatMessage('AI', '❌ 畫布未初始化，無法進行基本分析。');
+                    return;
+                }
+                
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const pixels = imageData.data;
+                
+                let colorCount = new Set();
+                let pixelCount = 0;
+                
+                for (let i = 3; i < pixels.length; i += 4) {
+                    if (pixels[i] > 0) {
+                        const r = pixels[i-3], g = pixels[i-2], b = pixels[i-1];
+                        colorCount.add(`${r}-${g}-${b}`);
+                        pixelCount++;
+                    }
+                }
+                
+                let analysis = '📊 **基本圖像分析：**\n\n';
+                analysis += `🎨 檢測到 ${colorCount.size} 種顏色\n`;
+                analysis += `📏 繪製了約 ${Math.round(pixelCount / 1000)} k 個像素\n\n`;
+                
+                analysis += '💡 **設計建議：**\n';
+                if (colorCount.size === 1) {
+                    analysis += '• 考慮增加對比色來突出重要元素\n';
+                } else if (colorCount.size > 8) {
+                    analysis += '• 色彩較多，建議統一色彩方案\n';
+                }
+                analysis += '• 可以嘗試添加一些幾何形狀來組織佈局\n';
+                analysis += '• 考慮添加文字標籤來說明功能\n\n';
+                analysis += '🔧 **升級提示：** 連接 AI 模型後可獲得更詳細的設計分析！';
+                
+                addChatMessage('AI', analysis);
+            }
+            
+            // 尋找設計範例函數
+            function findDesignExamples(keywords) {
+                addChatMessage('AI', `🔍 正在為您搜尋「${keywords}」相關的設計範例...`);
+                
+                setTimeout(() => {
+                    const examples = [
+                        `💡 **${keywords}設計建議：**\n`,
+                        '• 保持簡潔明了的視覺層次',
+                        '• 使用一致的色彩和字體',
+                        '• 確保足夠的對比度和可讀性',
+                        '• 遵循使用者的操作習慣',
+                        '\n🎨 **推薦參考：**',
+                        '• Material Design 設計規範',
+                        '• Apple Human Interface Guidelines',
+                        '• 優秀的設計作品集網站如 Dribbble、Behance',
+                        '\n✨ 請繼續在畫布上創作，我會為您提供更具體的建議！'
+                    ].join('\n');
+                    
+                    addChatMessage('AI', examples);
+                }, 1000);
+            }
+            
+            // 提供繪圖教學函數
+            function provideDrawingTutorial(message) {
+                addChatMessage('AI', '📚 **繪圖教學指南：**\n\n' +
+                    '🖱️ **基本操作：**\n' +
+                    '• 點擊並拖動滑鼠進行繪圖\n' +
+                    '• 使用右側的顏色選擇器變更顏色\n' +
+                    '• 調整筆刷大小滑桿控制線條粗細\n' +
+                    '• 點擊「清除」重新開始\n\n' +
+                    '🎨 **設計技巧：**\n' +
+                    '• 先畫大致輪廓，再添加細節\n' +
+                    '• 使用對比色突出重要元素\n' +
+                    '• 保持視覺平衡和對稱\n' +
+                    '• 適當留白讓設計更清晰\n\n' +
+                    '💡 **UI設計建議：**\n' +
+                    '• 按鈕要有明確的邊界\n' +
+                    '• 文字要有足夠的對比度\n' +
+                    '• 遵循一致的設計語言\n\n' +
+                    '✨ 開始創作吧！完成後點擊「分析圖像」獲得專業建議。');
+            }
+            
+            // 設置面板調整功能
+            setupPanelResizer();
+            
+            // 初始化模式設置
+            updateCanvasCursor();
+            
+            // 添加鍵盤事件監聽器（Escape 鍵取消圈選準備）
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' || e.key === 'Esc') {
+                    if (isReadyToSelect || isSelecting) {
+                        console.log('⚠️  按 Escape 取消圈選');
+                        isReadyToSelect = false;
+                        isSelecting = false;
+                        clearSelection();
+                        addChatMessage('AI', '❌ **已取消圈選**');
+                    }
+                }
+            });
+            
+            console.log('✅ 應用初始化完成！畫畫和圈選功能就緒');
+            
+            } catch (error) {
+                console.error('Error initializing app:', error);
+                alert('初始化失敗: ' + error.message);
+            }
+        }
+        
+        // 移動按鈕 - 移動模式切換
+        moveBtn = document.getElementById('move-btn');
+        if (moveBtn) {
+            moveBtn.addEventListener('click', function() {
+                if (selectionOperation === 'move') {
+                    setSelectionOperation(null); // 取消移動
+                } else {
+                    setSelectionOperation('move'); // 激活移動
+                }
+            });
+        }
+
+        // 測試內容按鈕 - 添加測試圖片和筆畫
+        const testContentBtn = document.getElementById('test-content-btn');
+        if (testContentBtn) {
+            testContentBtn.addEventListener('click', function() {
+                addTestContent();
+                addChatMessage('AI', '✅ 已添加測試內容！\n\n現在你可以測試移動功能：\n1. 點擊「🖐️ 移動選取」按鈕\n2. 在畫布上拖拽圈選內容\n3. 拖拽移動選中的項目');
+            });
+        }
+
+        // 顯示選取模式對話框
+        function showSelectionModeDialog(selection) {
+            const dialog = document.getElementById('selection-mode-dialog');
+            dialog.style.display = 'flex';
+
+            // 設置事件監聽器
+            const objectSelectBtn = document.getElementById('object-select-btn');
+            const preciseSelectBtn = document.getElementById('precise-select-btn');
+            const cancelBtn = document.getElementById('cancel-selection-btn');
+
+            // 臨時變量存儲選擇區域
+            window.currentSelection = selection;
+
+            // 物件選取模式
+            objectSelectBtn.onclick = function() {
+                console.log('📦 選擇物件選取模式');
+                addChatMessage('AI', '📦 **物件選取模式**\n\n選取完整的物件單位，保持物件完整性');
+
+                // 執行物件選取邏輯
+                selectedItems = getItemsInSelection(selection);
+                console.log('🖐️ 物件選取模式選中項目:', selectedItems.length, '個');
+
+                if (selectedItems.length > 0) {
+                    addChatMessage('AI', `✅ 選中了 ${selectedItems.length} 個完整物件，請拖拽移動`);
+                    updateCanvasCursor(); // 更新為移動游標
+                } else {
+                    addChatMessage('AI', '❌ 圈選區域內沒有找到完整的物件');
+                }
+
+                dialog.style.display = 'none';
+            };
+
+            // 精確切割模式
+            preciseSelectBtn.onclick = function() {
+                console.log('✂️ 選擇精確切割模式');
+                addChatMessage('AI', '✂️ **精確切割模式**\n\n此功能正在開發中，目前只能進行物件選取');
+
+                // 目前先執行物件選取邏輯
+                selectedItems = getItemsInSelection(selection);
+                console.log('🖐️ 精確切割模式選中項目:', selectedItems.length, '個');
+
+                if (selectedItems.length > 0) {
+                    addChatMessage('AI', `✅ 臨時使用物件選取：選中了 ${selectedItems.length} 個項目，請拖拽移動`);
+                    updateCanvasCursor(); // 更新為移動游標
+                } else {
+                    addChatMessage('AI', '❌ 圈選區域內沒有找到內容');
+                }
+
+                dialog.style.display = 'none';
+            };
+
+            // 取消按鈕
+            cancelBtn.onclick = function() {
+                console.log('❌ 取消選取模式選擇');
+                addChatMessage('AI', '❌ 已取消選取操作');
+                dialog.style.display = 'none';
+                updateCanvasCursor(); // 重置游標
+            };
+
+            // 點擊背景關閉
+            dialog.onclick = function(e) {
+                if (e.target === dialog) {
+                    cancelBtn.click();
+                }
+            };
+        }
+
+        // 添加測試內容的函數
+        function addTestContent() {
+            // 添加一個測試圖片（用彩色矩形代替）
+            const testImage = {
+                x: 100,
+                y: 100,
+                width: 80,
+                height: 60,
+                imageData: null, // 實際項目中這會是圖片數據
+                color: '#3498db' // 用於繪製測試矩形
+            };
+            images.push(testImage);
+
+            // 添加一個測試筆畫（簡單的線條）
+            const testStroke = {
+                points: [
+                    {x: 250, y: 150},
+                    {x: 300, y: 150},
+                    {x: 320, y: 170},
+                    {x: 280, y: 190}
+                ],
+                color: '#e74c3c',
+                size: 3
+            };
+            strokes.push(testStroke);
+
+            // 添加一個測試公式（用矩形代替）
+            const testFormula = {
+                x: 400,
+                y: 120,
+                width: 120,
+                height: 40,
+                text: 'E=mc²', // 測試用的公式文本
+                color: '#27ae60'
+            };
+            images.push(testFormula);
+
+            // 重繪畫布以顯示測試內容
+            redrawCanvas();
+
+            console.log('🧪 已添加測試內容:', {images: images.length, strokes: strokes.length});
+        }
+        
+        // 縮放按鈕 - 縮放模式切換
+        scaleBtn = document.getElementById('scale-btn');
+        if (scaleBtn) {
+            scaleBtn.addEventListener('click', function() {
+                if (selectionOperation === 'scale') {
+                    setSelectionOperation(null); // 取消縮放
+                } else {
+                    setSelectionOperation('scale'); // 激活縮放
+                }
+            });
+        }
+        
+        // 刪除按鈕 - 刪除模式切換
+        deleteBtn = document.getElementById('delete-btn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', function() {
+                if (selectionOperation === 'delete') {
+                    setSelectionOperation(null); // 取消刪除
+                } else {
+                    setSelectionOperation('delete'); // 激活刪除
+                }
+            });
+        }
+    </script>
+
+    <!-- 選取模式對話框 -->
+    <div id="selection-mode-dialog" class="dialog-overlay" style="display: none;">
+        <div class="dialog-content">
+            <div class="dialog-header">
+                <h3>選擇選取模式</h3>
+            </div>
+            <div class="dialog-body">
+                <p>請選擇如何選取圈選區域內的內容：</p>
+                <div class="mode-options">
+                    <button class="mode-btn" id="object-select-btn">
+                        <div class="mode-icon">📦</div>
+                        <div class="mode-title">物件選取</div>
+                        <div class="mode-desc">選取完整的物件單位，保持物件完整性</div>
+                    </button>
+                    <button class="mode-btn" id="precise-select-btn">
+                        <div class="mode-icon">✂️</div>
+                        <div class="mode-title">精確切割</div>
+                        <div class="mode-desc">精確選取區域內的部分內容（開發中）</div>
+                    </button>
+                </div>
+            </div>
+            <div class="dialog-footer">
+                <button class="btn btn-secondary" id="cancel-selection-btn">取消</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

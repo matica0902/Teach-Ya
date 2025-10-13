@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UI CoreWork - 智能設計協作平台</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- 載入中指示 -->
+    <div class="loading-text" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 18px; color: #666; z-index: 1000;">
+        載入中...
+    </div>
+
+    <!-- 主容器 -->
+    <div class="main-container" style="display: none; opacity: 0; transition: opacity 0.3s ease;">
+        <!-- 標題區 -->
+        <header class="header">
+            <h1><i class="fas fa-palette"></i> UI CoreWork</h1>
+            <p class="subtitle">智能設計協作平台 - Chat & Draw</p>
+        </header>
+
+        <!-- 主要工作區 -->
+        <div class="workspace">
+            <!-- 繪圖工具區 -->
+            <section class="panel tools-panel">
+                <div class="panel-header">
+                    <h3><i class="fas fa-tools"></i> 繪圖工具</h3>
+                </div>
+                <div class="panel-content">
+                    <!-- 工具選擇 -->
+                    <div class="tool-section">
+                        <h4>工具</h4>
+                        <div class="tool-grid">
+                            <button class="tool-btn active" data-tool="pen" title="筆刷">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                            <button class="tool-btn" data-tool="eraser" title="橡皮擦">
+                                <i class="fas fa-eraser"></i>
+                            </button>
+                            <button class="tool-btn" data-tool="line" title="直線">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <button class="tool-btn" data-tool="rect" title="矩形">
+                                <i class="fas fa-square"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 顏色選擇 -->
+                    <div class="tool-section">
+                        <h4>顏色</h4>
+                        <div class="color-palette">
+                            <input type="color" id="color-picker" value="#2c3e50" class="color-input">
+                            <div class="preset-colors">
+                                <div class="color-swatch" style="background: #2c3e50;" data-color="#2c3e50"></div>
+                                <div class="color-swatch" style="background: #e74c3c;" data-color="#e74c3c"></div>
+                                <div class="color-swatch" style="background: #3498db;" data-color="#3498db"></div>
+                                <div class="color-swatch" style="background: #2ecc71;" data-color="#2ecc71"></div>
+                                <div class="color-swatch" style="background: #f39c12;" data-color="#f39c12"></div>
+                                <div class="color-swatch" style="background: #9b59b6;" data-color="#9b59b6"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 筆刷大小 -->
+                    <div class="tool-section">
+                        <h4>筆刷大小</h4>
+                        <input type="range" id="brush-size" min="1" max="50" value="3" class="slider">
+                        <div class="size-display">3px</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 繪圖區域 -->
+            <section class="panel drawing-panel">
+                <div class="panel-header">
+                    <h3><i class="fas fa-paint-brush"></i> 畫布</h3>
+                    <div class="header-actions">
+                        <button class="btn btn-sm" id="clear-canvas" title="清除畫布">
+                            <i class="fas fa-trash"></i> 清除
+                        </button>
+                        <button class="btn btn-sm" id="save-drawing" title="儲存繪圖">
+                            <i class="fas fa-save"></i> 儲存
+                        </button>
+                    </div>
+                </div>
+                <div class="panel-content">
+                    <div class="drawing-area">
+                        <canvas id="drawing-canvas" class="drawing-canvas"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 聊天區域 -->
+            <section class="panel chat-panel">
+                <div class="panel-header">
+                    <h3><i class="fas fa-comments"></i> AI 聊天</h3>
+                </div>
+                <div class="panel-content chat-content">
+                    <!-- 聊天訊息區域 -->
+                    <div id="chat-messages" class="chat-messages">
+                        <div class="message ai-message">
+                            <div class="message-content">
+                                <strong>AI:</strong> 歡迎使用 UI CoreWork！您可以在左側畫布上繪圖，我會幫您分析和提供建議。試著畫點什麼吧！
+                            </div>
+                            <div class="message-time">剛剛</div>
+                        </div>
+                    </div>
+
+                    <!-- 輸入區域 -->
+                    <div class="chat-input-area">
+                        <textarea 
+                            id="chat-input" 
+                            class="chat-input" 
+                            placeholder="輸入您的訊息... (Ctrl+Enter 發送)"
+                            rows="5"
+                            maxlength="4000"
+                        ></textarea>
+                        <div class="input-actions">
+                            <button class="btn btn-primary" id="send-message">
+                                <i class="fas fa-paper-plane"></i> 發送
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- 範例展示區 -->
+        <section class="examples-section">
+            <div class="panel-header">
+                <h3><i class="fas fa-th-large"></i> 設計範例</h3>
+            </div>
+            <div class="examples-grid">
+                <div class="example-card" data-example="form">
+                    <div class="example-preview">
+                        <i class="fas fa-wpforms"></i>
+                    </div>
+                    <div class="example-info">
+                        <h4>表單設計</h4>
+                        <p>現代化的表單界面</p>
+                    </div>
+                </div>
+                <div class="example-card" data-example="dashboard">
+                    <div class="example-preview">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="example-info">
+                        <h4>儀錶板</h4>
+                        <p>數據可視化界面</p>
+                    </div>
+                </div>
+                <div class="example-card" data-example="navigation">
+                    <div class="example-preview">
+                        <i class="fas fa-bars"></i>
+                    </div>
+                    <div class="example-info">
+                        <h4>導航設計</h4>
+                        <p>響應式導航欄</p>
+                    </div>
+                </div>
+                <div class="example-card" data-example="card">
+                    <div class="example-preview">
+                        <i class="fas fa-id-card"></i>
+                    </div>
+                    <div class="example-info">
+                        <h4>卡片布局</h4>
+                        <p>卡片式界面設計</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 頁腳 -->
+        <footer class="footer">
+            <div class="footer-content">
+                <p>&copy; 2024 UI CoreWork. 智能設計協作平台</p>
+                <div class="footer-links">
+                    <span>狀態: <span class="status-indicator online">在線</span></span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- JavaScript 模組 -->
+    <script>
+        // 基本配置
+        window.UICoreworkConfig = {
+            api: {
+                baseURL: 'http://localhost:8000/api',
+                timeout: 30000
+            },
+            debug: {
+                enabled: true,
+                logLevel: 'info'
+            }
+        };
+    </script>
+    <script src="/static/js/simple_init.js"></script>
+</body>
+</html>

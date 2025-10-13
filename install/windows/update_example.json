@@ -1,0 +1,63 @@
+{
+  "example_updates": {
+    "description": "配置更新範例 - 當專案發生變化時",
+    "scenarios": {
+      "新增依賴套件": {
+        "action": "修改 install_config.json 的 dependencies.requirements_file",
+        "before": "backend/requirements.txt",
+        "after": "backend/requirements-new.txt",
+        "note": "安裝程式會自動使用新的依賴檔案"
+      },
+      "升級 Python 版本": {
+        "action": "修改 install_config.json 的 python.required_version",
+        "before": "3.8",
+        "after": "3.9",
+        "note": "安裝程式會檢查並要求更高版本的 Python"
+      },
+      "添加新功能": {
+        "action": "在 install_config.json 的 features 陣列中添加新項目",
+        "before": ["多模態繪圖系統"],
+        "after": ["多模態繪圖系統", "新 AI 功能"],
+        "note": "安裝完成訊息會自動顯示新功能"
+      },
+      "變更資料庫設定": {
+        "action": "修改 install_config.json 的 database 區塊",
+        "before": {
+          "type": "sqlite",
+          "data_file": "database/uicorework.db"
+        },
+        "after": {
+          "type": "postgresql",
+          "data_file": "database/uicorework_prod.db"
+        },
+        "note": "安裝程式會適應新的資料庫設定"
+      },
+      "變更服務器設定": {
+        "action": "修改 install_config.json 的 server 區塊",
+        "before": {
+          "host": "localhost",
+          "port": 8000
+        },
+        "after": {
+          "host": "0.0.0.0",
+          "port": 8080
+        },
+        "note": "安裝完成後會顯示新的服務器地址"
+      }
+    },
+    "maintenance_workflow": {
+      "step_1": "開發新功能或修改依賴",
+      "step_2": "更新 install_config.json 中的相關設定",
+      "step_3": "測試安裝程式是否正常工作",
+      "step_4": "提交配置變更到版本控制",
+      "step_5": "使用者運行安裝程式時會自動獲得新功能"
+    },
+    "benefits": [
+      "無需重寫安裝腳本",
+      "集中配置管理",
+      "自動適應專案變化",
+      "降低維護成本",
+      "提升開發效率"
+    ]
+  }
+}
