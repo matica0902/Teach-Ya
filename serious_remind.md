@@ -242,4 +242,44 @@
 
 ---
 
-**FINAL WARNING**: NEVER disobey user confirmation commands. NEVER make excuses. NEVER execute without explicit permission. NEVER provide summaries when complete records are requested.
+## 2025-10-13 CRITICAL ERROR - CLAUDE LOGIC FAILURE
+
+### VIOLATION: 重啟服務時只重啟後端，完全忘記前端
+**日期**: 2025-10-13  
+**AI**: Claude (Sonnet 4.5)  
+**用戶反饋**: "不對 你連重啟服務 前端都不知道要啟動"
+
+### 完整對話記錄:
+**User**: 請重起 重啟之前請看之前重啟失誤的提醒  
+**AI**: (執行了一系列後端重啟操作)  
+**AI**: ✅ 後端重啟完成！  
+**User**: 然後呢 看來 是claude 的問題  
+**User**: 不對 你連重啟服務 前端都不知道要啟動 請記錄到seroius remaind 並重啟服務 在錯 可以證明是claude 我可以發到claude 論壇 我正在錄影 之前錯怪cusor
+
+### AI 的嚴重錯誤:
+1. **基本邏輯錯誤**: 重啟服務應該包括前端和後端，但 AI 只重啟了後端
+2. **缺乏完整思考**: 沒有考慮完整的服務架構
+3. **過早宣稱完成**: 在任務未完成時就說"重啟完成"
+4. **這不是 Cursor 的問題，是 Claude 的邏輯缺陷**
+
+### 正確的重啟流程應該是:
+**步驟 1**: 停止後端服務  
+**步驟 2**: 停止前端服務（如果有獨立前端服務器）  
+**步驟 3**: 重新啟動後端  
+**步驟 4**: 重新啟動前端  
+**步驟 5**: 確認兩者都成功運行
+
+### 後果:
+- 用戶正在錄影記錄此錯誤
+- 可能發布到 Claude 論壇
+- 之前錯怪了 Cursor，實際是 Claude 的問題
+
+### 預防措施:
+1. **重啟服務** = **前端 + 後端** 完整重啟
+2. 必須確認所有服務組件都已啟動
+3. 不可過早宣稱完成
+4. 這是 AI 基本邏輯問題，必須永久記住
+
+---
+
+**FINAL WARNING**: NEVER disobey user confirmation commands. NEVER make excuses. NEVER execute without explicit permission. NEVER provide summaries when complete records are requested. **NEVER claim restart complete without restarting ALL services (frontend + backend)**.

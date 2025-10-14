@@ -4,7 +4,7 @@ UI CoreWork - FastAPI 後端服務器
 提供聊天、範例、繪圖功能的 REST API
 """
 
-from fastapi import FastAPI, HTTPException, Depends, UploadFile, File
+from fastapi import FastAPI, HTTPException, Depends, UploadFile, File, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
@@ -22,6 +22,7 @@ from pathlib import Path
 import io
 from PIL import Image
 import google.generativeai as genai
+import openai
 
 # 設定日誌
 logging.basicConfig(level=logging.INFO)
@@ -68,6 +69,80 @@ UPLOAD_DIR = BASE_DIR / "uploads"
 # 確保目錄存在
 DATABASE_PATH.parent.mkdir(exist_ok=True)
 UPLOAD_DIR.mkdir(exist_ok=True)
+
+# ============ AI 客戶端管理 ============
+
+def get_gemini_client(api_key: str, model: str = 'gemini-2.0-flash-exp'):
+    """動態建立 Gemini 客戶端"""
+    genai.configure(api_key=api_key)
+    return genai.GenerativeModel(model)
+
+def get_openai_client(api_key: str):
+    """動態建立 OpenAI 客戶端"""
+    return openai.OpenAI(api_key=api_key)
+
+async def validate_gemini_key(api_key: str) -> Dict[str, Any]:
+    """驗證 Gemini API Key 並取得可用模型"""
+    try:
+        genai.configure(api_key=api_key)
+        # 嘗試列出模型來驗證 key
+        models = []
+        for model in genai.list_models():
+            if 'generateContent' in model.supported_generation_methods:
+                model_name = model.name.replace('models/', '')
+                models.append(model_name)
+        
+        # 如果 API 返回了模型列表，使用它；否則使用預設列表
+        if not models:
+            models = [
+                "gemini-2.0-flash-exp",
+                "gemini-1.5-pro",
+                "gemini-1.5-flash",
+                "gemini-1.0-pro-vision"
+            ]
+        
+        return {
+            "valid": True,
+            "models": models
+        }
+    except Exception as e:
+        logger.error(f"Gemini key validation failed: {e}")
+        return {"valid": False, "error": str(e)}
+
+async def validate_openai_key(api_key: str) -> Dict[str, Any]:
+    """驗證 OpenAI API Key 並取得可用模型"""
+    try:
+        client = openai.OpenAI(api_key=api_key)
+        models_response = client.models.list()
+        
+        # 過濾出支援視覺的模型
+        vision_models = []
+        all_models = [model.id for model in models_response.data]
+        
+        # 優先顯示支援視覺的模型
+        vision_model_names = [
+            "gpt-4o",
+            "gpt-4o-mini", 
+            "gpt-4-turbo",
+            "gpt-4-vision-preview",
+            "gpt-4"
+        ]
+        
+        for model_name in vision_model_names:
+            if model_name in all_models:
+                vision_models.append(model_name)
+        
+        # 如果沒有找到，使用預設列表
+        if not vision_models:
+            vision_models = ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-4-vision-preview"]
+        
+        return {
+            "valid": True,
+            "models": vision_models
+        }
+    except Exception as e:
+        logger.error(f"OpenAI key validation failed: {e}")
+        return {"valid": False, "error": str(e)}
 
 # ============ 資料模型 ============
 
@@ -214,6 +289,72 @@ def init_database():
 
 # ============ AI 圖像分析功能 ============
 
+async def analyze_with_gemini(client, image_data: str, prompt: str) -> Dict[str, Any]:
+    """使用 Gemini 分析圖像"""
+    try:
+        if image_data.startswith('data:image'):
+            image_data = image_data.split(',')[1]
+        
+        image_bytes = base64.b64decode(image_data)
+        image = Image.open(io.BytesIO(image_bytes))
+        
+        response = client.generate_content([prompt, image])
+        analysis_text = response.text
+        
+        suggested_examples = []
+        text_lower = analysis_text.lower()
+        if "按鈕" in analysis_text or "button" in text_lower:
+            suggested_examples.append("按鈕")
+        if "表單" in analysis_text:
+            suggested_examples.append("表單")
+        
+        return {
+            "success": True,
+            "analysis": analysis_text,
+            "suggested_examples": suggested_examples or ["界面設計"]
+        }
+    except Exception as e:
+        logger.error(f"Gemini analysis error: {e}")
+        return {"success": False, "error": str(e)}
+
+async def analyze_with_openai(client, image_data: str, prompt: str, model: str = "gpt-4o") -> Dict[str, Any]:
+    """使用 OpenAI Vision 分析圖像"""
+    try:
+        if not image_data.startswith('data:image'):
+            image_data = f"data:image/png;base64,{image_data}"
+        
+        response = client.chat.completions.create(
+            model=model or "gpt-4o",
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {"type": "image_url", "image_url": {"url": image_data}}
+                    ]
+                }
+            ],
+            max_tokens=1000
+        )
+        
+        analysis_text = response.choices[0].message.content
+        
+        suggested_examples = []
+        text_lower = analysis_text.lower()
+        if "按鈕" in analysis_text or "button" in text_lower:
+            suggested_examples.append("按鈕")
+        if "表單" in analysis_text or "form" in text_lower:
+            suggested_examples.append("表單")
+        
+        return {
+            "success": True,
+            "analysis": analysis_text,
+            "suggested_examples": suggested_examples or ["界面設計"]
+        }
+    except Exception as e:
+        logger.error(f"OpenAI analysis error: {e}")
+        return {"success": False, "error": str(e)}
+
 async def analyze_image_with_ai(image_data: str, prompt: str) -> Dict[str, Any]:
     """使用 Gemini AI 分析圖像"""
     try:
@@ -316,6 +457,95 @@ async def analyze_image_with_ai(image_data: str, prompt: str) -> Dict[str, Any]:
             "success": False,
             "error": f"AI 分析失敗: {str(e)}"
         }
+
+async def analyze_math_with_gemini(client, image_data: str) -> Dict[str, Any]:
+    """使用 Gemini 分析數學公式"""
+    try:
+        if image_data.startswith('data:image'):
+            image_data = image_data.split(',')[1]
+        
+        image_bytes = base64.b64decode(image_data)
+        image = Image.open(io.BytesIO(image_bytes))
+        
+        math_prompt = """
+        你是一個專業的數學公式識別專家。請分析這個圖像中的數學內容。
+        
+        圖像可能包含：
+        - 手寫的數學公式
+        - 印刷體的數學公式
+        - 混合的數學表達式和手寫內容
+        
+        你的任務：
+        1. 識別圖像中**所有**的數學內容（包括已經是標準格式的）
+        2. 將所有數學內容轉換為 LaTeX 格式
+        3. **重要**：保持原始的排版結構（如果是多行，使用多行格式）
+        
+        輸出格式：
+        - 直接輸出 LaTeX 代碼，用 \\[ 和 \\] 包圍
+        - 只輸出純 LaTeX，不要其他說明文字
+        - **多行公式請使用 \\begin{aligned} ... \\end{aligned} 格式**
+        - 確保 LaTeX 語法正確，可被 KaTeX 渲染
+        """
+        
+        response = client.generate_content([math_prompt, image])
+        analysis_text = response.text
+        
+        latex_formula = extract_latex_from_analysis(analysis_text)
+        confidence = calculate_math_confidence(analysis_text)
+        
+        return {
+            "success": True,
+            "analysis": analysis_text,
+            "latex": latex_formula,
+            "confidence": confidence
+        }
+    except Exception as e:
+        logger.error(f"Gemini math analysis error: {e}")
+        return {"success": False, "error": str(e)}
+
+async def analyze_math_with_openai(client, image_data: str, model: str = "gpt-4o") -> Dict[str, Any]:
+    """使用 OpenAI 分析數學公式"""
+    try:
+        if not image_data.startswith('data:image'):
+            image_data = f"data:image/png;base64,{image_data}"
+        
+        math_prompt = """
+        你是一個專業的數學公式識別專家。請分析這個圖像中的數學內容。
+        
+        輸出格式：
+        - 直接輸出 LaTeX 代碼，用 \\[ 和 \\] 包圍
+        - 只輸出純 LaTeX，不要其他說明文字
+        - 多行公式請使用 \\begin{aligned} ... \\end{aligned} 格式
+        - 確保 LaTeX 語法正確，可被 KaTeX 渲染
+        """
+        
+        response = client.chat.completions.create(
+            model=model or "gpt-4o",
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": math_prompt},
+                        {"type": "image_url", "image_url": {"url": image_data}}
+                    ]
+                }
+            ],
+            max_tokens=500
+        )
+        
+        analysis_text = response.choices[0].message.content
+        latex_formula = extract_latex_from_analysis(analysis_text)
+        confidence = calculate_math_confidence(analysis_text)
+        
+        return {
+            "success": True,
+            "analysis": analysis_text,
+            "latex": latex_formula,
+            "confidence": confidence
+        }
+    except Exception as e:
+        logger.error(f"OpenAI math analysis error: {e}")
+        return {"success": False, "error": str(e)}
 
 async def analyze_math_formula(image_data: str) -> Dict[str, Any]:
     """
@@ -622,22 +852,65 @@ async def health_check():
     """健康檢查"""
     return {"status": "ok", "timestamp": get_timestamp()}
 
+# ============ AI Key 驗證 API ============
+
+@app.post("/api/validate-key")
+async def validate_api_key(request: Request):
+    """驗證 AI API Key 並回傳可用模型列表"""
+    provider = request.headers.get('X-AI-Provider', '').lower()
+    api_key = request.headers.get('X-API-Key', '')
+    
+    if not provider or not api_key:
+        return JSONResponse(
+            status_code=400,
+            content={"valid": False, "error": "缺少 Provider 或 API Key"}
+        )
+    
+    if provider == 'gemini':
+        result = await validate_gemini_key(api_key)
+    elif provider == 'openai':
+        result = await validate_openai_key(api_key)
+    else:
+        return JSONResponse(
+            status_code=400,
+            content={"valid": False, "error": f"不支援的 Provider: {provider}"}
+        )
+    
+    return JSONResponse(content=result)
+
 # ============ AI 圖像分析 API ============
 
 @app.post("/api/analyze-image")
-async def analyze_image(request: ImageAnalysisRequest) -> ImageAnalysisResponse:
+async def analyze_image(request: Request) -> ImageAnalysisResponse:
     """分析上傳的圖像並提供設計建議"""
     try:
         logger.info("Received image analysis request")
         
-        # 確保 prompt 始終為字符串
-        prompt = request.prompt or "默認分析提示"
-        # 嘗試使用 AI 分析
-        if GEMINI_API_KEY:
-            result = await analyze_image_with_ai(request.image_data, prompt)
+        # 讀取 request body
+        body = await request.json()
+        image_data = body.get('image_data', '')
+        prompt = body.get('prompt', '請分析這個UI設計草圖')
+        
+        # 讀取自訂 AI 設定
+        provider = request.headers.get('X-AI-Provider', '').lower()
+        api_key = request.headers.get('X-API-Key', '')
+        model = request.headers.get('X-AI-Model', '')
+        
+        # 如果有提供自訂 API Key，使用自訂 AI
+        if provider and api_key:
+            if provider == 'gemini':
+                client = get_gemini_client(api_key, model or 'gemini-2.0-flash-exp')
+                result = await analyze_with_gemini(client, image_data, prompt)
+            elif provider == 'openai':
+                client = get_openai_client(api_key)
+                result = await analyze_with_openai(client, image_data, prompt, model or 'gpt-4o')
+            else:
+                result = {"success": False, "error": f"不支援的 Provider: {provider}"}
+        # 否則使用預設的環境變數 API Key
+        elif GEMINI_API_KEY:
+            result = await analyze_image_with_ai(image_data, prompt)
         else:
-            # 使用後備分析
-            result = fallback_image_analysis(request.image_data)
+            result = fallback_image_analysis(image_data)
         
         return ImageAnalysisResponse(**result)
         
@@ -649,13 +922,33 @@ async def analyze_image(request: ImageAnalysisRequest) -> ImageAnalysisResponse:
         )
 
 @app.post("/api/analyze-math", response_model=MathFormulaResponse)
-async def analyze_math_formula_api(request: MathFormulaRequest) -> MathFormulaResponse:
+async def analyze_math_formula_api(request: Request) -> MathFormulaResponse:
     """專門的數學公式分析API端點"""
     logger.info("Received math formula analysis request")
     
     try:
-        # 調用專門的數學公式分析函數
-        result = await analyze_math_formula(request.image_data)
+        # 讀取 request body
+        body = await request.json()
+        image_data = body.get('image_data', '')
+        
+        # 讀取自訂 AI 設定
+        provider = request.headers.get('X-AI-Provider', '').lower()
+        api_key = request.headers.get('X-API-Key', '')
+        model = request.headers.get('X-AI-Model', '')
+        
+        # 如果有提供自訂 API Key，使用自訂 AI
+        if provider and api_key:
+            if provider == 'gemini':
+                client = get_gemini_client(api_key, model or 'gemini-2.0-flash-exp')
+                result = await analyze_math_with_gemini(client, image_data)
+            elif provider == 'openai':
+                client = get_openai_client(api_key)
+                result = await analyze_math_with_openai(client, image_data, model or 'gpt-4o')
+            else:
+                result = {"success": False, "error": f"不支援的 Provider: {provider}"}
+        # 否則使用預設的環境變數 API Key
+        else:
+            result = await analyze_math_formula(image_data)
         
         return MathFormulaResponse(**result)
         

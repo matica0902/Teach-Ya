@@ -35,6 +35,9 @@
 
 ## 🚀 快速開始
 
+### Windows 使用者快速啟動
+- 請優先參考 `WINDOWS_START.md`：針對 Windows 的一鍵啟動與疑難排解精簡指南。
+
 ### 方法一：一鍵啟動（推薦）
 
 #### Linux/macOS
@@ -369,6 +372,11 @@ python -m pytest tests/  # (需要先建立測試檔案)
 ```
 
 ## 📝 更新日誌
+
+### v2.0.0 (2025-10-14)
+- 新增 `WINDOWS_START.md`：Windows 快速啟動與疑難排解
+- 在 `README.md` 「快速開始」新增 Windows 指引連結
+- 驗證 `start_windows.bat` 啟動流程與健康檢查可用
 
 ### v1.0.0 (2024-01-XX)
 - ✅ 完整的多模態繪圖系統

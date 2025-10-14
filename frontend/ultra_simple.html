@@ -34,8 +34,11 @@
         }
         
         .chat-messages {
-            height: 200px;
-            overflow-y: auto;
+            flex: 1; /* 自動填充剩餘空間 */
+            min-height: 200px; /* 最小高度 */
+            max-height: 50vh; /* 最大高度為視窗的 50% */
+            overflow-y: auto; /* 垂直滾動 */
+            overflow-x: hidden; /* 禁止橫向滾動 */
             border: 1px solid #ddd;
             border-radius: 8px;
             padding: 10px;
@@ -71,7 +74,43 @@
         .resizable-panel {
             min-height: 100px;
             overflow: hidden;
-        }     * {
+        }
+        
+        /* 聊天區域 Flexbox 佈局 */
+        .chat-section {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .chat-section .panel-content {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow-y: auto; /* 改為垂直滾動 */
+            overflow-x: hidden;
+            padding-bottom: 10px; /* 確保底部有空間 */
+        }
+        
+        /* AI 設定區域 */
+        .ai-settings {
+            flex-shrink: 0; /* 不被壓縮 */
+        }
+        
+        /* 聊天訊息區域在 .chat-section 內時的特殊樣式 */
+        .chat-section .chat-messages {
+            flex: 1; /* 自動填充 */
+            min-height: 150px;
+            max-height: none; /* 移除最大高度限制 */
+        }
+        
+        /* 輸入框和按鈕 */
+        .chat-section .chat-input,
+        .chat-section .send-button {
+            flex-shrink: 0; /* 不被壓縮 */
+        }
+        
+        * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -129,8 +168,12 @@
         
         .panel-content {
             padding: 12px;
-            max-height: 70vh;
-            overflow-y: auto;
+            max-height: calc(100vh - 150px); /* 動態高度，扣除 header 和 padding */
+            overflow-y: auto; /* 垂直滾動 */
+            overflow-x: hidden; /* 禁止橫向滾動 */
+            display: flex;
+            flex-direction: column; /* 垂直排列 */
+            gap: 10px;
         }
         
         .drawing-area {
@@ -149,7 +192,8 @@
         }
         
         .tool-group {
-            margin-bottom: 15px;
+            margin-bottom: 0; /* 移除 margin，改用 gap */
+            width: 100%; /* 占滿寬度 */
         }
         
         .tool-group h4 {
@@ -160,14 +204,15 @@
         }
         
         .tool-buttons, .mode-buttons {
-            display: grid;
-            grid-template-columns: 1fr;
+            display: flex;
+            flex-direction: column; /* 垂直排列 */
             gap: 8px;
-            margin-bottom: 15px;
+            width: 100%; /* 占滿寬度 */
         }
         
         .mode-buttons {
-            grid-template-columns: 1fr 1fr;
+            flex-direction: row; /* 模式按鈕橫向排列 */
+            flex-wrap: wrap; /* 允許換行 */
         }
         
         .tool-btn, .mode-btn {
@@ -179,6 +224,10 @@
             transition: all 0.2s;
             font-size: 14px;
             text-align: center;
+            width: 100%; /* 占滿寬度 */
+            white-space: nowrap; /* 文字不換行 */
+            overflow: hidden; /* 隱藏溢出 */
+            text-overflow: ellipsis; /* 顯示省略號 */
         }
         
         .tool-btn:hover, .mode-btn:hover {
@@ -239,7 +288,15 @@
         .action-buttons {
             display: flex;
             gap: 10px;
-            margin-top: 20px;
+            margin-top: 15px;
+            flex-wrap: wrap; /* 允許換行 */
+            width: 100%;
+            flex-shrink: 0; /* 防止被壓縮 */
+        }
+        
+        .action-buttons .btn {
+            flex: 1; /* 按鈕平均分配空間 */
+            min-width: 80px; /* 最小寬度 */
         }
         
         .btn {
@@ -379,15 +436,7 @@
             background: #7f8c8d;
         }
         
-        .chat-messages {
-            height: 200px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-            background: #f8f9fa;
-        }
+        /* .chat-messages 已在上方定義，此處移除重複 */
         
         .message {
             margin-bottom: 15px;
@@ -440,6 +489,100 @@
                 grid-template-columns: 1fr;
                 gap: 15px;
             }
+        }
+        
+        /* AI 設定區域 */
+        .ai-settings {
+            background: #f8f9fa;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .ai-settings h4 {
+            margin: 0 0 12px 0;
+            color: #2c3e50;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .ai-form-group {
+            margin-bottom: 12px;
+        }
+        
+        .ai-form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 13px;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        .ai-form-select,
+        .ai-form-input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 13px;
+            background: white;
+        }
+        
+        .ai-form-input[type="password"] {
+            font-family: monospace;
+        }
+        
+        .ai-btn {
+            width: 100%;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .ai-btn-verify {
+            background: #3498db;
+            color: white;
+            margin-bottom: 10px;
+        }
+        
+        .ai-btn-verify:hover {
+            background: #2980b9;
+        }
+        
+        .ai-btn-verify:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        .ai-status {
+            padding: 8px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            text-align: center;
+            margin-top: 8px;
+        }
+        
+        .ai-status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .ai-status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .ai-status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
         }
         
         /* 範例展示區域 */
@@ -533,20 +676,17 @@
                     <div class="panel-content">
                         <div class="tool-group">
                             <h4>功能</h4>
-                            <button class="tool-btn" id="select-area-btn" style="width: 100%; margin-bottom: 10px; background: #3498db; color: white;">
+                            <button class="tool-btn function-btn" id="select-area-btn" style="width: 100%; margin-bottom: 10px; background: #95a5a6; color: white;">
                                 🔲 圈選區域
                             </button>
-                            <button class="tool-btn" id="move-btn" style="width: 100%; margin-bottom: 10px; background: #9b59b6; color: white;">
+                            <button class="tool-btn function-btn" id="move-btn" style="width: 100%; margin-bottom: 10px; background: #95a5a6; color: white;">
                                 🖐️ 移動選取
                             </button>
-                            <button class="tool-btn" id="scale-btn" style="width: 100%; margin-bottom: 10px; background: #f39c12; color: white;">
+                            <button class="tool-btn function-btn" id="scale-btn" style="width: 100%; margin-bottom: 10px; background: #95a5a6; color: white;">
                                 🔍 縮放選取
                             </button>
-                            <button class="tool-btn" id="delete-btn" style="width: 100%; margin-bottom: 10px; background: #e74c3c; color: white;">
+                            <button class="tool-btn function-btn" id="delete-btn" style="width: 100%; margin-bottom: 10px; background: #95a5a6; color: white;">
                                 🗑️ 刪除選取
-                            </button>
-                            <button class="tool-btn" id="test-content-btn" style="width: 100%; margin-bottom: 10px; background: #9b59b6; color: white;">
-                                🧪 添加測試內容
                             </button>
                         </div>
                         
@@ -578,8 +718,15 @@
                         </div>
                         
                         <div class="action-buttons">
+                            <button id="undo-btn" class="btn btn-secondary" title="回上一步 (Ctrl+Z)" disabled>↩️ 回上一步</button>
+                            <button id="redo-btn" class="btn btn-secondary" title="重做 (Ctrl+Y)" disabled>➡️ 重做</button>
                             <button id="clear-btn" class="btn btn-danger">清除</button>
                             <button id="analyze-btn" class="btn btn-primary">分析圖像</button>
+                        </div>
+                        <!-- 上傳圖片 -->
+                        <input id="image-upload-input" type="file" accept="image/*" style="display:none;">
+                        <div class="action-buttons">
+                            <button id="upload-image-btn" class="btn btn-primary">上傳圖片</button>
                         </div>
                     </div>
                 </div>
@@ -616,6 +763,31 @@
                         <div id="chat-panel" class="chat-section resizable-panel">
                             <div class="panel-header">💬 AI 助手</div>
                             <div class="panel-content">
+                                <!-- AI 設定面板 -->
+                                <div class="ai-settings">
+                                    <h4>🤖 AI 設定</h4>
+                                    <div class="ai-form-group">
+                                        <label>AI 提供商</label>
+                                        <select id="ai-provider" class="ai-form-select">
+                                            <option value="">使用預設 (環境變數)</option>
+                                            <option value="gemini">Google Gemini</option>
+                                            <option value="openai">OpenAI</option>
+                                        </select>
+                                    </div>
+                                    <div class="ai-form-group">
+                                        <label>API Key</label>
+                                        <input type="password" id="ai-api-key" class="ai-form-input" placeholder="輸入您的 API Key">
+                                    </div>
+                                    <button id="ai-verify-btn" class="ai-btn ai-btn-verify">驗證 API Key</button>
+                                    <div class="ai-form-group" id="ai-model-group" style="display: none;">
+                                        <label>選擇模型</label>
+                                        <select id="ai-model" class="ai-form-select">
+                                            <option value="">載入中...</option>
+                                        </select>
+                                    </div>
+                                    <div id="ai-status" class="ai-status" style="display: none;"></div>
+                                </div>
+                                
                                 <div id="chat-messages" class="chat-messages">
                                     <div class="message ai-message">
                                         <strong>AI:</strong> 歡迎使用 UI CoreWork！我可以：<br>
@@ -644,10 +816,164 @@
     </div>
 
     <script>
+        // ============ AI 設定管理 ============
+        const AIConfig = {
+            storage: {
+                provider: localStorage.getItem('ai_provider') || '',
+                apiKey: localStorage.getItem('ai_api_key') || '',
+                model: localStorage.getItem('ai_model') || ''
+            },
+            
+            save(provider, apiKey, model) {
+                this.storage.provider = provider;
+                this.storage.apiKey = apiKey;
+                this.storage.model = model;
+                localStorage.setItem('ai_provider', provider);
+                localStorage.setItem('ai_api_key', apiKey);
+                localStorage.setItem('ai_model', model);
+            },
+            
+            clear() {
+                this.storage = {provider: '', apiKey: '', model: ''};
+                localStorage.removeItem('ai_provider');
+                localStorage.removeItem('ai_api_key');
+                localStorage.removeItem('ai_model');
+            },
+            
+            getHeaders() {
+                if (!this.storage.provider || !this.storage.apiKey) {
+                    return {};
+                }
+                return {
+                    'X-AI-Provider': this.storage.provider,
+                    'X-API-Key': this.storage.apiKey,
+                    'X-AI-Model': this.storage.model || ''
+                };
+            },
+            
+            isConfigured() {
+                return !!(this.storage.provider && this.storage.apiKey);
+            }
+        };
+        
+        // AI 設定初始化
+        function initAISettings() {
+            const providerSelect = document.getElementById('ai-provider');
+            const apiKeyInput = document.getElementById('ai-api-key');
+            const verifyBtn = document.getElementById('ai-verify-btn');
+            const modelGroup = document.getElementById('ai-model-group');
+            const modelSelect = document.getElementById('ai-model');
+            const statusDiv = document.getElementById('ai-status');
+            
+            if (!providerSelect || !apiKeyInput || !verifyBtn) {
+                console.warn('AI settings elements not found');
+                return;
+            }
+            
+            // 載入儲存的設定
+            if (AIConfig.storage.provider) {
+                providerSelect.value = AIConfig.storage.provider;
+                apiKeyInput.value = AIConfig.storage.apiKey;
+                if (AIConfig.storage.model) {
+                    modelGroup.style.display = 'block';
+                    modelSelect.innerHTML = `<option value="${AIConfig.storage.model}">${AIConfig.storage.model}</option>`;
+                    modelSelect.value = AIConfig.storage.model;
+                }
+            }
+            
+            // Provider 改變時清除 key 和 model
+            providerSelect.addEventListener('change', function() {
+                apiKeyInput.value = '';
+                modelGroup.style.display = 'none';
+                statusDiv.style.display = 'none';
+                AIConfig.clear();
+            });
+            
+            // 驗證按鈕
+            verifyBtn.addEventListener('click', async function() {
+                const provider = providerSelect.value;
+                const apiKey = apiKeyInput.value.trim();
+                
+                if (!provider) {
+                    showStatus('請選擇 AI 提供商', 'error');
+                    return;
+                }
+                
+                if (!apiKey) {
+                    showStatus('請輸入 API Key', 'error');
+                    return;
+                }
+                
+                verifyBtn.disabled = true;
+                verifyBtn.textContent = '驗證中...';
+                showStatus('正在驗證 API Key...', 'info');
+                
+                try {
+                    const response = await fetch('/api/validate-key', {
+                        method: 'POST',
+                        headers: {
+                            'X-AI-Provider': provider,
+                            'X-API-Key': apiKey
+                        }
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.valid && result.models) {
+                        // 驗證成功
+                        showStatus(`✅ 驗證成功！找到 ${result.models.length} 個可用模型`, 'success');
+                        
+                        // 填充模型選單
+                        modelSelect.innerHTML = result.models.map(m => 
+                            `<option value="${m}">${m}</option>`
+                        ).join('');
+                        modelGroup.style.display = 'block';
+                        
+                        // 儲存設定
+                        const selectedModel = result.models[0];
+                        modelSelect.value = selectedModel;
+                        AIConfig.save(provider, apiKey, selectedModel);
+                        
+                        addChatMessage('AI', `🎉 AI 設定成功！\n提供商：${provider}\n模型：${selectedModel}`);
+                    } else {
+                        showStatus(`❌ 驗證失敗：${result.error || '未知錯誤'}`, 'error');
+                        modelGroup.style.display = 'none';
+                        AIConfig.clear();
+                    }
+                } catch (error) {
+                    showStatus(`❌ 連接失敗：${error.message}`, 'error');
+                    modelGroup.style.display = 'none';
+                    AIConfig.clear();
+                } finally {
+                    verifyBtn.disabled = false;
+                    verifyBtn.textContent = '驗證 API Key';
+                }
+            });
+            
+            // Model 選擇改變時更新儲存
+            modelSelect.addEventListener('change', function() {
+                if (AIConfig.storage.provider && AIConfig.storage.apiKey) {
+                    AIConfig.save(
+                        AIConfig.storage.provider,
+                        AIConfig.storage.apiKey,
+                        modelSelect.value
+                    );
+                    console.log('✅ 模型已切換至:', modelSelect.value);
+                    addChatMessage('AI', `✅ 模型已切換至：${modelSelect.value}`);
+                }
+            });
+            
+            function showStatus(message, type) {
+                statusDiv.textContent = message;
+                statusDiv.className = `ai-status ${type}`;
+                statusDiv.style.display = 'block';
+            }
+        }
+        
         // 設置面板調整功能
         function setupPanelResizer() {
             const resizer = document.getElementById('panel-resizer');
-            const mindMapPanel = document.getElementById('mind-map-panel');
+            const mindMapPanel = document.getElementById('mindmap-panel');
             const chatPanel = document.getElementById('chat-panel');
             
             if (!resizer || !mindMapPanel || !chatPanel) {
@@ -752,7 +1078,10 @@
             }
             const messageDiv = document.createElement('div');
             messageDiv.className = 'message ' + (sender === 'AI' ? 'ai-message' : 'user-message');
-            messageDiv.innerHTML = '<strong>' + sender + ':</strong> ' + message;
+            messageDiv.innerHTML = '<strong>' + sender + ':</strong> ';
+            const span = document.createElement('span');
+            span.textContent = ' ' + message;
+            messageDiv.appendChild(span);
             chatMessages.appendChild(messageDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
@@ -777,19 +1106,75 @@
             ctx.restore();
         }
         
-        // 重繪畫布
+        // ⭐ 優化版：重繪畫布（支援 Layer 順序）
         function redrawCanvas() {
             if (!ctx || !canvas) return; // 檢查是否已初始化
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // 重繪所有筆畫
-            strokes.forEach(stroke => {
-                // 如果是圖片類型的筆畫（公式渲染結果）
-                if (stroke.tool === 'image' && stroke.image) {
+            // ⭐ 新的圖層順序（從底到頂）：
+            // 1. 背景（如果有）
+            // 2. 上傳的圖片（images 陣列）
+            // 3. 數學公式（按 layerOrder）
+            // 4. 新的筆畫（strokes 陣列，排除數學公式）- 確保繪畫在最上層
+            
+            // === 第一層：背景（目前為空白）===
+            // 未來可在此添加背景圖或背景色
+            
+            // === 第二層：上傳的圖片（第三層 - 在公式之下）===
+            images.forEach(image => {
+                ctx.save();
+                if (image.img) {
+                    ctx.drawImage(image.img, image.x, image.y, image.width, image.height);
+                } else if (image.imageData) {
+                    if (!image._imgCache) {
+                        image._imgCache = new Image();
+                        image._imgCache.onload = function() {
+                            image.img = image._imgCache;
+                            ctx.drawImage(image.img, image.x, image.y, image.width, image.height);
+                        };
+                        image._imgCache.src = image.imageData;
+                    } else if (image._imgCache.complete) {
+                        image.img = image._imgCache;
+                        ctx.drawImage(image.img, image.x, image.y, image.width, image.height);
+                    }
+                } else if (image.color) {
+                    // 測試內容：繪製彩色矩形
+                    ctx.fillStyle = image.color;
+                    ctx.fillRect(image.x, image.y, image.width, image.height);
+                    ctx.strokeStyle = '#000';
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(image.x, image.y, image.width, image.height);
+
+                    // 如果有文本（如公式），繪製文本
+                    if (image.text) {
+                        ctx.fillStyle = '#fff';
+                        ctx.font = '16px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(image.text,
+                                   image.x + image.width/2,
+                                   image.y + image.height/2);
+                    }
+                }
+                ctx.restore();
+            });
+
+            // === 第三層：數學公式（第二層 - 在圖片之上，筆畫之下）===
+            layerOrder.forEach(formulaId => {
+                const formulaObj = formulaObjects.get(formulaId);
+                if (formulaObj && formulaObj.stroke && formulaObj.stroke.image) {
+                    const stroke = formulaObj.stroke;
                     ctx.save();
                     ctx.drawImage(stroke.image, stroke.x, stroke.y, stroke.width, stroke.height);
                     ctx.restore();
+                }
+            });
+
+            // === 第四層：新的筆畫（最上層 - 確保繪畫在最前面）===
+            strokes.forEach(stroke => {
+                // 跳過數學公式，已在上面渲染
+                if (stroke.type === 'math_formula' || (stroke.tool === 'image' && stroke.id)) {
                     return;
                 }
                 
@@ -813,68 +1198,13 @@
                 ctx.stroke();
                 ctx.restore();
             });
-
-            // 重繪所有圖片
-            images.forEach(image => {
-                ctx.save();
-                if (image.imageData) {
-                    // 如果是真實圖片數據
-                    const img = new Image();
-                    img.onload = function() {
-                        ctx.drawImage(img, image.x, image.y, image.width, image.height);
-                    };
-                    img.src = image.imageData;
-                } else if (image.color) {
-                    // 測試內容：繪製彩色矩形
-                    ctx.fillStyle = image.color;
-                    ctx.fillRect(image.x, image.y, image.width, image.height);
-                    ctx.strokeStyle = '#000';
-                    ctx.lineWidth = 1;
-                    ctx.strokeRect(image.x, image.y, image.width, image.height);
-
-                    // 如果有文本（如公式），繪製文本
-                    if (image.text) {
-                        ctx.fillStyle = '#fff';
-                        ctx.font = '16px Arial';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText(image.text,
-                                   image.x + image.width/2,
-                                   image.y + image.height/2);
-                    }
-                }
-                ctx.restore();
-            });
+            
+            // ⭐ 繪製縮放邊界框
+            drawScalingBounds();
         }
         
         // 處理選中區域
-        function processSelection(selection) {
-            if (!ctx || !canvas) return; // 檢查是否已初始化
-            
-            console.log('Selection area:', selection);
-            
-            // 提取選中區域的圖像數據
-            const imageData = ctx.getImageData(selection.x, selection.y, selection.width, selection.height);
-            
-            // 創建臨時canvas來處理選中區域
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = selection.width;
-            tempCanvas.height = selection.height;
-            const tempCtx = tempCanvas.getContext('2d');
-            
-            // 先填充白色背景，確保數學公式識別清晰度
-            tempCtx.fillStyle = 'white';
-            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-            
-            // 再放上選中的內容
-            tempCtx.putImageData(imageData, 0, 0);
-            
-            // 轉換為base64圖像
-            const imageBase64 = tempCanvas.toDataURL('image/png');
-            
-            // 顯示處理選項
-            showSelectionOptions(selection, imageBase64);
-        }
+        // （刪除重複）processSelection 的完整實作見後文
         
         // 顯示選擇處理選項（使用絕對定位浮動按鈕）
         function showSelectionOptions(selection, imageBase64) {
@@ -1145,19 +1475,29 @@
                     // 移動模式：顯示選取模式選擇對話框
                     console.log('🖐️ 移動模式圈選完成，顯示模式選擇');
                     showSelectionModeDialog(selection);
+                } else if (isScaling) {
+                    // ⭐ 縮放模式：顯示選取模式選擇對話框
+                    console.log('🔍 縮放模式圈選完成，顯示模式選擇');
+                    showSelectionModeDialog(selection);
+                } else if (isDeleting) {
+                    // ⭐ 刪除模式：顯示選取模式選擇對話框
+                    console.log('🗑️ 刪除模式圈選完成，顯示模式選擇');
+                    showSelectionModeDialog(selection);
                 } else {
-                    // 原有圈選功能
+                    // 原有圈選功能（純圈選模式）
                     console.log('✅ 區域有效，調用 processSelection');
                     processSelection(selection);
-                }
                 
-                // ⚠️ 圈選完成後，退出圈選模式並恢復按鈕狀態
+                    // ⭐ 只有在純圈選模式下，才自動退出並重置按鈕
+                    if (selectionOperation === 'select') {
                 isReadyToSelect = false;
-                const selectAreaBtn = document.getElementById('select-area-btn');
+                        selectionOperation = null;  // 退出圈選模式
                 if (selectAreaBtn) {
-                    selectAreaBtn.style.background = '#3498db';  // 恢復原色
+                            selectAreaBtn.style.background = '#95a5a6';  // 恢復灰底
                 }
-                console.log('✅ 圈選完成，已自動退出圈選模式');
+                        console.log('✅ 純圈選完成，已自動退出圈選模式');
+                    }
+                }
             } else {
                 console.log('❌ 選擇區域太小，已忽略');
                 console.log('   🐛 調試信息:');
@@ -1200,6 +1540,30 @@
             console.log('   調用 showSelectionOptions...');
             showSelectionOptions(selection, imageBase64);
         }
+
+        // 新增：將圖片加入畫布並快取，置中與縮放到畫布 60% 內
+        function addImageToCanvas(img) {
+            if (!canvas) return;
+            const maxW = Math.min(canvas.width * 0.6, 600);
+            const scale = Math.min(1, maxW / img.width);
+            const w = Math.round(img.width * scale);
+            const h = Math.round(img.height * scale);
+            const x = Math.round((canvas.width - w) / 2);
+            const y = Math.round((canvas.height - h) / 2);
+
+            const imageId = 'image_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+            const imageObj = { id: imageId, x, y, width: w, height: h, img };
+
+            // 以指令方式納入，支援撤銷
+            if (typeof AddImageCommand === 'function') {
+                historyManager.execute(new AddImageCommand(imageObj));
+            } else {
+                images.push(imageObj);
+            }
+
+            redrawCanvas();
+            addChatMessage('AI', `🖼️ 已上傳圖片：${w}×${h}`);
+        }
         
         function updateCanvasCursor() {
             const canvas = document.getElementById('drawing-canvas');
@@ -1218,25 +1582,29 @@
                 }
             } else {
                 canvas.style.cursor = 'crosshair';
-                canvas.title = '點擊拖拽繪畫，按住Shift拖拽圈選區域';
+                canvas.title = '點擊拖拽繪畫；使用左側按鈕進入圈選/移動/縮放模式';
             }
         }
         
         // ===== 統一畫布事件處理 =====
         function handleCanvasMouseDown(e) {
-            console.log('🖱️  mousedown, isSelecting:', isSelecting, ', isReadyToSelect:', isReadyToSelect, ', isMoving:', isMoving, ', selectedItems:', selectedItems.length);
+            console.log('🖱️  mousedown, selectionOperation:', selectionOperation, ', isSelecting:', isSelecting, ', isReadyToSelect:', isReadyToSelect, ', isMoving:', isMoving, ', selectedItems:', selectedItems.length);
 
-            // 如果準備圈選，則啟動圈選
+            // ⭐ 優先級順序：按鈕模式 > 繪圖模式
+            
+            // 1. 圈選模式（點擊「選」按鈕後）
             if (isReadyToSelect) {
                 console.log('🔲 啟動圈選');
                 isReadyToSelect = false;  // 清除準備標志
                 startSelection(e);
-            } else if (isSelecting) {
-                // 已經在圈選中（理論上不會到這裡）
+            } 
+            // 2. 已經在圈選中
+            else if (isSelecting) {
                 console.log('🔲 繼續圈選');
                 startSelection(e);
-            } else if (isMoving) {
-                // 移動模式
+            } 
+            // 3. 移動模式（點擊「移動」按鈕後）
+            else if (isMoving) {
                 if (selectedItems.length > 0) {
                     // 有選中項目：開始拖拽
                     console.log('🖐️ 開始移動拖拽已選中的內容');
@@ -1251,24 +1619,61 @@
                     console.log('🔲 移動模式：啟動圈選來選擇要移動的內容');
                     startSelection(e);
                 }
+            }
+            // 4. 縮放模式（點擊「縮放」按鈕後）
+            else if (isScaling) {
+                if (selectedItems.length > 0 && scalingBounds) {
+                    // 有選中項目：檢查是否點擊角落
+                    const rect = canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    const corner = getCornerAtPoint(x, y);
+                    if (corner) {
+                        // 點擊了角落：開始拖拽縮放
+                        console.log('🔍 開始拖拽縮放，角落:', corner);
+                        scalingCorner = corner;
+                        scalingStartPoint = {x, y};
+                        scalingInitialBounds = {...scalingBounds};
             } else {
+                        console.log('⚠️ 請點擊邊界框的角落來縮放');
+                        addChatMessage('AI', '⚠️ 請點擊邊界框的**藍色方塊**（角落）來縮放');
+                    }
+                } else {
+                    // 沒有選中項目：開始圈選
+                    console.log('🔲 縮放模式：啟動圈選來選擇要縮放的內容');
+                    startSelection(e);
+                }
+            }
+            // 5. 刪除模式（點擊「刪除」按鈕後）
+            else if (isDeleting) {
+                console.log('🗑️ 刪除模式（未實作）');
+                addChatMessage('AI', '⚠️ 刪除功能正在開發中...');
+            }
+            // 6. 預設繪圖模式（沒有任何按鈕被激活）
+            else {
                 console.log('✏️  啟動繪圖');
                 startDrawing(e);
             }
         }
         
         function handleCanvasMouseMove(e) {
+            // ⭐ 優先級順序：確保只有一個狀態處理移動事件
+            
+            // 1. 繪圖中
             if (isDrawing) {
                 draw(e);
-            } else if (isSelecting) {
-                // 添加日志確認 mousemove 被觸發
+            } 
+            // 2. 圈選中
+            else if (isSelecting) {
                 const rect = canvas.getBoundingClientRect();
                 const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
                 console.log('🔄 mousemove (圈選中):', Math.round(x), ',', Math.round(y));
                 updateSelection(e);
-            } else if (isDragging) {
-                // 移動模式：拖拽選中內容
+            } 
+            // 3. 拖拽移動中
+            else if (isDragging) {
                 const rect = canvas.getBoundingClientRect();
                 const currentX = e.clientX - rect.left;
                 const currentY = e.clientY - rect.top;
@@ -1278,12 +1683,44 @@
                 
                 console.log('🔄 移動拖拽: Δx=' + deltaX.toFixed(1) + ', Δy=' + deltaY.toFixed(1));
                 
-                // 移動所有選中項目
+                // ⭐ 累積移動增量（用於稍後創建 Command）
+                if (!tempMoveDeltas) {
+                    tempMoveDeltas = {totalX: 0, totalY: 0};
+                }
+                tempMoveDeltas.totalX += deltaX;
+                tempMoveDeltas.totalY += deltaY;
+                
+                // 移動所有選中項目（視覺反饋）
                 moveSelectedItems(deltaX, deltaY);
                 
                 // 更新起始點為當前位置
                 moveStartPoint.x = currentX;
                 moveStartPoint.y = currentY;
+            }
+            // 4. ⭐ 拖拽縮放中
+            else if (scalingCorner) {
+                const rect = canvas.getBoundingClientRect();
+                const currentX = e.clientX - rect.left;
+                const currentY = e.clientY - rect.top;
+                
+                // 計算縮放比例
+                const ratio = calculateScaleRatio(scalingCorner, currentX, currentY);
+                
+                console.log('🔍 縮放中，比例:', ratio.toFixed(2));
+                
+                // 應用縮放
+                applyScale(ratio);
+                // 記錄最後縮放比例，供 mouseup 寫入歷史
+                lastScalingRatio = ratio;
+            } else {
+                // 非拖拽縮放時，如果在縮放模式且存在邊界框，提供游標提示
+                if (isScaling && scalingBounds) {
+                    const rect = canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const corner = getCornerAtPoint(x, y);
+                    canvas.style.cursor = corner ? 'se-resize' : 'crosshair';
+                }
             }
         }
         
@@ -1300,8 +1737,56 @@
                 // 移動模式：結束拖拽
                 console.log('🖐️ 結束移動拖拽');
                 isDragging = false;
+                
+                // ⭐ 提交移動指令到歷史記錄
+                if (tempMoveDeltas && (tempMoveDeltas.totalX !== 0 || tempMoveDeltas.totalY !== 0)) {
+                    const command = new MoveItemsCommand(
+                        selectedItems,
+                        tempMoveDeltas.totalX,
+                        tempMoveDeltas.totalY
+                    );
+                    historyManager.execute(command);
+                    tempMoveDeltas = null;
+                }
+                
                 addChatMessage('AI', '✅ **移動完成**');
                 updateCanvasCursor(); // 更新游標狀態
+            } else if (scalingCorner) {
+                // ⭐ 縮放模式：結束拖拽縮放
+                console.log('🔍 結束拖拽縮放');
+                
+                // ⭐ 提交縮放指令到歷史記錄（使用最後一次縮放比例）
+                if (scalingInitialBounds && scalingInitialItems) {
+                    const ratio = lastScalingRatio || 1.0;
+                    const command = new ScaleItemsCommand(
+                        selectedItems,
+                        scalingInitialBounds.centerX,
+                        scalingInitialBounds.centerY,
+                        ratio
+                    );
+                    historyManager.execute(command);
+                }
+                
+                // ⭐ 完全清除所有縮放相關狀態
+                scalingCorner = null;
+                scalingStartPoint = {x: 0, y: 0};
+                scalingInitialBounds = null;
+                scalingInitialItems = null;
+                scalingBounds = null; // ⭐ 清除邊界框
+                
+                // ⭐ 清除選中項目，退出縮放模式
+                selectedItems = [];
+                isScaling = false; // ⭐ 重要：退出縮放模式
+                selectionOperation = null; // ⭐ 清除操作模式
+                
+                // ⭐ 重置縮放按鈕樣式
+                if (scaleBtn) scaleBtn.style.background = '#95a5a6';
+                
+                addChatMessage('AI', '✅ **縮放完成**\n\n已回到繪圖模式，可以繼續繪畫。');
+                
+                // 重繪畫布（移除邊界框）
+                redrawCanvas();
+                updateCanvasCursor(); // ⭐ 更新游標
             } else if (isReadyToSelect) {
                 // 如果準備圈選但沒有真正開始（例如只是移動鼠標），取消準備狀態
                 console.log('⚠️  取消圈選準備（未開始圈選就 mouseup）');
@@ -1332,11 +1817,16 @@
             
             try {
                 // 調用專門的數學公式分析API
+                const headers = {
+                    'Content-Type': 'application/json',
+                    ...AIConfig.getHeaders()
+                };
+                
+                console.log('📤 發送數學公式分析請求，Headers:', headers);
+                
                 const response = await fetch('/api/analyze-math', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: headers,
                     body: JSON.stringify({
                         image_data: selectionData.imageBase64
                     })
@@ -1348,12 +1838,7 @@
                     console.log('✅ AI返回LaTeX:', result.latex);
                     
                     // 先清理LaTeX格式以供顯示
-                    let displayLatex = result.latex.trim();
-                    displayLatex = displayLatex.replace(/\\\[/g, '').replace(/\\\]/g, '');
-                    displayLatex = displayLatex.replace(/\\\(/g, '').replace(/\\\)/g, '');
-                    displayLatex = displayLatex.replace(/^\$\$/, '').replace(/\$\$$/, '');
-                    displayLatex = displayLatex.replace(/^\$/, '').replace(/\$$/, '');
-                    displayLatex = displayLatex.trim();
+                    let displayLatex = sanitizeLatex(result.latex);
                     
                     // ⚠️ 檢查清理後的LaTeX是否為空（避免誤刪畫布內容）
                     if (!displayLatex || displayLatex.length === 0) {
@@ -1371,7 +1856,8 @@
                     renderMathFormula(result.latex, selectionData.selection);
                 } else if (result.success && result.analysis) {
                     // 如果沒有LaTeX但有分析結果，嘗試提取
-                    const latex = extractLatexFromResponse(result.analysis);
+                    const latexRaw = extractLatexFromResponse(result.analysis);
+                    const latex = latexRaw ? sanitizeLatex(latexRaw) : null;
                     
                     if (latex) {
                         addChatMessage('AI', `🧮 **分析結果：**\n${result.analysis}\n\n📐 提取的LaTeX: \`${latex}\``);
@@ -1393,50 +1879,85 @@
         
         // 從AI回應中提取LaTeX公式
         function extractLatexFromResponse(response) {
-            // 尋找LaTeX格式的公式（$...$ 或 $$...$$）
+            console.log('🔍 提取 LaTeX，原始回應:', response);
+            
+            // 尋找LaTeX格式的公式（多種格式）
             const latexPatterns = [
-                /\$\$([^$]+)\$\$/g,  // $$...$$
-                /\$([^$]+)\$/g,      // $...$
+                /\\\[([^\]]+)\\\]/g,     // \[...\]
+                /\\\(([^\)]+)\\\)/g,     // \(...\)
+                /\$\$([^$]+)\$\$/g,      // $$...$$
+                /\$([^$]+)\$/g,          // $...$
                 /\\begin\{[^}]+\}.*?\\end\{[^}]+\}/gs,  // \begin{...}...\end{...}
             ];
             
             for (const pattern of latexPatterns) {
                 const matches = response.match(pattern);
                 if (matches && matches.length > 0) {
+                    console.log('✅ 找到 LaTeX 格式:', matches[0]);
                     return matches[0];
                 }
             }
             
             // 如果沒有找到標準LaTeX格式，嘗試提取可能的數學表達式
-            const mathKeywords = ['equation', 'formula', 'expression', '公式', '方程'];
+            const mathKeywords = ['equation', 'formula', 'expression', '公式', '方程', 'int', 'frac', 'sum'];
             if (mathKeywords.some(keyword => response.toLowerCase().includes(keyword))) {
-                // 返回簡化的LaTeX格式
-                return response.replace(/[^\w\s\+\-\*\/\=\(\)\^\{\}]/g, '');
+                console.log('⚠️ 使用備用提取邏輯');
+                // 返回整個回應（稍後再清理）
+                return response.trim();
             }
             
+            console.log('❌ 未找到 LaTeX 格式');
             return null;
         }
         
+        // 共享：LaTeX 清理器（強化版）
+        function sanitizeLatex(input) {
+            if (!input) return '';
+            let s = ('' + input)
+                .replace(/^\s+|\s+$/g, '')
+                // 去除包裹符號與代碼框
+                .replace(/^```[\s\S]*?```$/g, function(m){ return m.replace(/^```|```$/g, ''); })
+                .replace(/^\\\[/, '').replace(/\\\]$/, '')
+                .replace(/^\\\(/, '').replace(/\\\)$/, '')
+                .replace(/^\$\$/, '').replace(/\$\$$/, '')
+                .replace(/^\$/, '').replace(/\$$/, '')
+                // 移除前綴文字
+                .replace(/^.*?[:：]\s*/, '')
+                .replace(/^(分析結果|公式|equation|formula|Expression)\s*/i, '')
+                // 移除末尾孤立運算子與多餘空白
+                .replace(/[=+\-*/]\s*$/,'')
+                .replace(/\s+/g, ' ')
+                .trim();
+            // 針對常見 AI 多餘符號
+            s = s.replace(/[。，、．。]+$/,'');
+            return s;
+        }
+
         // 渲染數學公式並替換到畫布 - 完全重寫版本
         function renderMathFormula(latex, selection) {
             console.log('🎯 renderMathFormula 開始執行');
             console.log('   輸入LaTeX:', latex);
             console.log('   選擇區域:', selection);
             
-            // 步驟1: 清理LaTeX格式
-            let cleanLatex = latex.trim()
-                .replace(/\\\[/g, '').replace(/\\\]/g, '')  // 移除 \[ \]
-                .replace(/\\\(/g, '').replace(/\\\)/g, '')  // 移除 \( \)
-                .replace(/^\$\$/, '').replace(/\$\$$/, '')  // 移除 $$..$$
-                .replace(/^\$/, '').replace(/\$$/, '')      // 移除 $..$
-                .trim();
+            // ⭐ 步驟1: 增強版 LaTeX 清理邏輯
+            let cleanLatex = sanitizeLatex(latex);
             
             console.log('   清理後LaTeX:', cleanLatex);
+            console.log('   LaTeX 長度:', cleanLatex.length);
             
-            // 檢查清理後的LaTeX是否為空
+            // 檢查清理後的LaTeX是否為空或過短
             if (!cleanLatex || cleanLatex.length === 0) {
                 console.error('❌ LaTeX內容為空，無法渲染');
-                addChatMessage('AI', '❌ **識別失敗**\n\n無法識別圈選區域的數學公式。\n可能原因：\n• 圈選了已經轉換過的公式（請圈選手寫內容）\n• AI識別失敗\n• 圖片不清晰');
+                addChatMessage('AI', '❌ **識別失敗**\n\n無法識別圈選區域的數學公式。\n可能原因：\n• 圈選了已經轉換過的公式\n• AI識別失敗\n• 圖片不清晰\n\n原始回應: ' + latex.substring(0, 50));
+                isSelecting = false;
+                isReadyToSelect = false;
+                return;
+            }
+            
+            // 檢查是否只是符號沒有實際內容
+            if (cleanLatex.length < 2 || /^[=+\-*/\s]+$/.test(cleanLatex)) {
+                console.error('❌ LaTeX只包含符號，沒有實際內容');
+                addChatMessage('AI', '❌ **識別失敗**\n\n提取的公式只包含符號，沒有實際內容。\n\n提取內容: "' + cleanLatex + '"');
                 isSelecting = false;
                 isReadyToSelect = false;
                 return;
@@ -1479,17 +2000,28 @@
                     img.onload = () => {
                         console.log('✅ 圖片載入成功，尺寸:', img.width, 'x', img.height);
                         
-                        // 步驟4: 直接使用圈選範圍（1:1 對應，保證完全覆蓋）
-                        const x = selection.x;
-                        const y = selection.y;
-                        const w = selection.width;
-                        const h = selection.height;
+                        // ⭐ 步驟4: 使用實際渲染後的圖片大小（而非圈選區域大小）
+                        // 位置計算：將公式圖片的中心點對齊到圈選區域的中心點
+                        // 大小：使用實際 canvas 返回的圖片大小（真實公式大小）
+                        
+                        // 計算圈選區域的中心點
+                        const selectionCenterX = selection.x + selection.width / 2;
+                        const selectionCenterY = selection.y + selection.height / 2;
+                        
+                        // 使用實際圖片大小
+                        const w = img.width;   // ⭐ 使用實際圖片寬度
+                        const h = img.height;  // ⭐ 使用實際圖片高度
+                        
+                        // 將公式圖片的中心點對齊到圈選區域的中心點
+                        const x = selectionCenterX - w / 2;
+                        const y = selectionCenterY - h / 2;
                         
                         console.log('📐 繪製參數:');
                         console.log('   圈選範圍:', selection);
-                        console.log('   渲染圖片:', {width: img.width, height: img.height});
-                        console.log('   最終尺寸:', {x, y, w, h});
-                        console.log('   ✅ 1:1 對應，保證完全覆蓋');
+                        console.log('   圈選中心點:', {x: selectionCenterX, y: selectionCenterY});
+                        console.log('   渲染圖片（實際大小）:', {width: img.width, height: img.height});
+                        console.log('   最終位置（置中對齊）:', {x, y, w, h});
+                        console.log('   ⭐ 公式圖片中心 = 圈選區域中心');
                         
                         // 步驟5: 先從strokes中移除選擇區域內的筆畫
                         // ⚠️ 新規則：只刪除「有重疊」的內容，不管橡皮擦
@@ -1580,23 +2112,12 @@
                             editable: true  // 標記為可獨立編輯
                         };
                         
-                        strokes.push(formulaStroke);
-                        
-                        // 添加到公式管理系統
-                        formulaObjects.set(formulaId, {
-                            stroke: formulaStroke,
-                            metadata: {
-                                createdAt: Date.now(),
-                                originalSelection: selection,
-                                replacedStrokes: strokes.length - newStrokes.length,  // 記錄替換了多少筆畫
-                                layer: layerOrder.length
-                            }
-                        });
-                        layerOrder.push(formulaId);
+                        // ⭐ 改用 Command Pattern
+                        const command = new AddFormulaCommand(formulaStroke, formulaId);
+                        historyManager.execute(command);
                         
                         console.log('✅ 公式已添加為可編輯筆畫:', formulaId);
                         console.log('📋 當前公式數量:', formulaObjects.size);
-                        
                         console.log('✅ 公式已添加為筆畫，總數:', strokes.length);
                         
                         // 步驟7: 重繪整個畫布
@@ -1693,6 +2214,53 @@
             return false;
         }
         
+        // ⭐ 新增：公式圖層管理功能
+        function bringFormulaToFront(formulaId) {
+            const index = layerOrder.indexOf(formulaId);
+            if (index > -1) {
+                layerOrder.splice(index, 1);
+                layerOrder.push(formulaId);
+                redrawCanvas();
+                console.log('⬆️ 公式已置頂:', formulaId);
+                return true;
+            }
+            return false;
+        }
+        
+        function sendFormulaToBack(formulaId) {
+            const index = layerOrder.indexOf(formulaId);
+            if (index > -1) {
+                layerOrder.splice(index, 1);
+                layerOrder.unshift(formulaId);
+                redrawCanvas();
+                console.log('⬇️ 公式已置底:', formulaId);
+                return true;
+            }
+            return false;
+        }
+        
+        function moveFormulaUp(formulaId) {
+            const index = layerOrder.indexOf(formulaId);
+            if (index > -1 && index < layerOrder.length - 1) {
+                [layerOrder[index], layerOrder[index + 1]] = [layerOrder[index + 1], layerOrder[index]];
+                redrawCanvas();
+                console.log('↑ 公式上移一層:', formulaId);
+                return true;
+            }
+            return false;
+        }
+        
+        function moveFormulaDown(formulaId) {
+            const index = layerOrder.indexOf(formulaId);
+            if (index > 0) {
+                [layerOrder[index], layerOrder[index - 1]] = [layerOrder[index - 1], layerOrder[index]];
+                redrawCanvas();
+                console.log('↓ 公式下移一層:', formulaId);
+                return true;
+            }
+            return false;
+        }
+        
         // 圈選功能變量
         let isSelecting = false; // 是否處於圈選狀態
         let isReadyToSelect = false; // 準備圈選（點擊按鈕後，等待用戶在畫布上點擊）
@@ -1714,84 +2282,984 @@
         let isDragging = false; // 是否正在拖拽移動
         let moveStartPoint = {x: 0, y: 0}; // 移動起始點
         let selectedItems = []; // 選中的項目陣列
+        let tempMoveDeltas = null; // 暫存移動的累積增量（用於 Command）
+        
+        // 其他操作功能變量
+        let isScaling = false; // 縮放模式狀態
+        let isDeleting = false; // 刪除模式狀態
+        
+        // 縮放功能變量
+        let scalingBounds = null; // 選中物件的邊界框
+        let scalingCorner = null; // 當前拖拽的角落 ('se' 右下角)
+        let scalingStartPoint = {x: 0, y: 0}; // 縮放拖拽起始點
+        let scalingInitialBounds = null; // 縮放開始時的邊界框
+        let scalingInitialItems = null; // 縮放開始時的項目初始狀態
+        let lastScalingRatio = 1.0; // 記錄最後一次縮放比例
+        
+        // ===== Command Pattern 系統 =====
+        
+        // 輔助：依 ID 查找索引（避免索引漂移）
+        function findStrokeIndexById(id) {
+            if (!id) return -1;
+            for (let i = 0; i < strokes.length; i++) {
+                const s = strokes[i];
+                if (s && s.id === id) return i;
+            }
+            return -1;
+        }
+        function findImageIndexById(id) {
+            if (!id) return -1;
+            for (let i = 0; i < images.length; i++) {
+                const im = images[i];
+                if (im && im.id === id) return i;
+            }
+            return -1;
+        }
+
+        // ⭐ Command 基礎類
+        class Command {
+            execute() {
+                throw new Error('必須實作 execute() 方法');
+            }
+            
+            undo() {
+                throw new Error('必須實作 undo() 方法');
+            }
+            
+            redo() {
+                this.execute(); // 預設 redo 就是重新執行
+            }
+        }
+        
+        // ⭐ 歷史管理器
+        class HistoryManager {
+            constructor() {
+                this.history = [];
+                this.currentIndex = -1;
+                this.maxHistory = 100; // 最多保存 100 步
+            }
+            
+            execute(command) {
+                // 執行指令
+                command.execute();
+                
+                // 清除 redo 歷史（當用戶執行新操作時）
+                this.history = this.history.slice(0, this.currentIndex + 1);
+                
+                // 添加到歷史
+                this.history.push(command);
+                this.currentIndex++;
+                
+                // 限制歷史長度
+                if (this.history.length > this.maxHistory) {
+                    this.history.shift();
+                    this.currentIndex--;
+                }
+                
+                console.log(`✅ 執行指令: ${command.constructor.name}，歷史步數: ${this.currentIndex + 1}/${this.history.length}`);
+                this.updateUI();
+            }
+            
+            undo() {
+                if (!this.canUndo()) {
+                    console.log('⚠️ 無法回上一步');
+                    return false;
+                }
+                
+                this.history[this.currentIndex].undo();
+                this.currentIndex--;
+                console.log(`⬅️ 回上一步，目前步數: ${this.currentIndex + 1}/${this.history.length}`);
+                redrawCanvas();
+                this.updateUI();
+                return true;
+            }
+            
+            redo() {
+                if (!this.canRedo()) {
+                    console.log('⚠️ 無法重做');
+                    return false;
+                }
+                
+                this.currentIndex++;
+                this.history[this.currentIndex].redo();
+                console.log(`➡️ 重做，目前步數: ${this.currentIndex + 1}/${this.history.length}`);
+                redrawCanvas();
+                this.updateUI();
+                return true;
+            }
+            
+            canUndo() {
+                return this.currentIndex >= 0;
+            }
+            
+            canRedo() {
+                return this.currentIndex < this.history.length - 1;
+            }
+            
+            clear() {
+                this.history = [];
+                this.currentIndex = -1;
+                console.log('🗑️ 清除歷史記錄');
+                this.updateUI();
+            }
+            
+            updateUI() {
+                // 更新 UI 按鈕狀態（稍後實作）
+                if (typeof updateHistoryUI === 'function') {
+                    updateHistoryUI();
+                }
+            }
+        }
+        
+        // ⭐ 創建全局歷史管理器
+        const historyManager = new HistoryManager();
+        
+        // ===== Command 實作類別 =====
+        
+        // ⭐ 1. 繪製筆畫指令
+        class DrawStrokeCommand extends Command {
+            constructor(stroke) {
+                super();
+                this.stroke = stroke;
+            }
+            
+            execute() {
+                // 確保每個筆畫有穩定 ID
+                if (!this.stroke.id) {
+                    this.stroke.id = 'stroke_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+                }
+                strokes.push(this.stroke);
+                console.log('✏️ 繪製筆畫，總數:', strokes.length);
+            }
+            
+            undo() {
+                const index = strokes.indexOf(this.stroke);
+                if (index > -1) {
+                    strokes.splice(index, 1);
+                    console.log('↩️ 移除筆畫，剩餘:', strokes.length);
+                }
+            }
+        }
+        
+        // ⭐ 2. 添加數學公式指令
+        class AddFormulaCommand extends Command {
+            constructor(formulaStroke, formulaId) {
+                super();
+                this.formulaStroke = formulaStroke;
+                this.formulaId = formulaId;
+                this.strokeIndex = -1;
+                this.metadata = null;
+            }
+            
+            execute() {
+                // 添加到 strokes
+                this.strokeIndex = strokes.push(this.formulaStroke) - 1;
+                
+                // 添加到公式管理系統
+                this.metadata = {
+                    createdAt: Date.now(),
+                    layer: layerOrder.length
+                };
+                
+                formulaObjects.set(this.formulaId, {
+                    stroke: this.formulaStroke,
+                    metadata: this.metadata
+                });
+                
+                layerOrder.push(this.formulaId);
+                
+                console.log('➕ 添加數學公式:', this.formulaId);
+            }
+            
+            undo() {
+                // 從 strokes 中移除
+                if (this.strokeIndex >= 0 && this.strokeIndex < strokes.length) {
+                    strokes.splice(this.strokeIndex, 1);
+                }
+                
+                // 從公式管理系統中移除
+                formulaObjects.delete(this.formulaId);
+                const layerIndex = layerOrder.indexOf(this.formulaId);
+                if (layerIndex > -1) {
+                    layerOrder.splice(layerIndex, 1);
+                }
+                
+                console.log('↩️ 移除數學公式:', this.formulaId);
+            }
+        }
+        
+        // ⭐ 2.5 新增圖片指令
+        class AddImageCommand extends Command {
+            constructor(imageObj) {
+                super();
+                this.image = imageObj;
+                this.insertIndex = -1;
+            }
+            execute() {
+                if (!this.image.id) {
+                    this.image.id = 'image_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+                }
+                this.insertIndex = images.push(this.image) - 1;
+                console.log('➕ 添加圖片:', this.image.id);
+            }
+            undo() {
+                const idx = this.image.id ? findImageIndexById(this.image.id) : this.insertIndex;
+                if (idx >= 0 && idx < images.length) {
+                    images.splice(idx, 1);
+                    console.log('↩️ 移除圖片:', this.image.id);
+                }
+            }
+        }
+        
+        // ⭐ 3. 移動物件指令
+        class MoveItemsCommand extends Command {
+            constructor(items, deltaX, deltaY) {
+                super();
+                this.items = JSON.parse(JSON.stringify(items)); // 深拷貝
+                this.deltaX = deltaX;
+                this.deltaY = deltaY;
+            }
+            
+            execute() {
+                this.items.forEach(item => {
+                    this.moveItem(item, this.deltaX, this.deltaY);
+                });
+                console.log('🖐️ 移動物件:', this.items.length, '個');
+            }
+            
+            undo() {
+                this.items.forEach(item => {
+                    this.moveItem(item, -this.deltaX, -this.deltaY);
+                });
+                console.log('↩️ 復原移動:', this.items.length, '個');
+            }
+            
+            moveItem(item, dx, dy) {
+                if (item.tool === 'formula' || item.tool === 'image') {
+                    if (item.sourceArray === 'strokes') {
+                        const idx = item.id ? findStrokeIndexById(item.id) : item.index;
+                        if (idx >= 0 && idx < strokes.length) {
+                            strokes[idx].x += dx;
+                            strokes[idx].y += dy;
+                        }
+                    } else if (item.sourceArray === 'images') {
+                        const idx = item.id ? findImageIndexById(item.id) : item.index;
+                        if (idx >= 0 && idx < images.length) {
+                            images[idx].x += dx;
+                            images[idx].y += dy;
+                        }
+                    }
+                } else if (item.tool === 'stroke' && item.sourceArray === 'strokes') {
+                    const idx = item.id ? findStrokeIndexById(item.id) : item.index;
+                    if (idx >= 0 && idx < strokes.length) {
+                        strokes[idx].points.forEach(point => {
+                            point.x += dx;
+                            point.y += dy;
+                        });
+                    }
+                }
+            }
+        }
+        
+        // ⭐ 4. 縮放物件指令
+        class ScaleItemsCommand extends Command {
+            constructor(items, centerX, centerY, ratio) {
+                super();
+                this.items = JSON.parse(JSON.stringify(items)); // 深拷貝
+                this.centerX = centerX;
+                this.centerY = centerY;
+                this.ratio = ratio;
+                this.originalStates = this.saveStates();
+            }
+            
+            saveStates() {
+                return this.items.map(item => {
+                    if (item.sourceArray === 'strokes') {
+                        const idx = item.id ? findStrokeIndexById(item.id) : item.index;
+                        if (idx >= 0 && idx < strokes.length) {
+                            const stroke = strokes[idx];
+                            return {
+                                id: stroke.id,
+                                index: idx,
+                                sourceArray: item.sourceArray,
+                                x: stroke.x,
+                                y: stroke.y,
+                                width: stroke.width,
+                                height: stroke.height,
+                                points: stroke.points ? JSON.parse(JSON.stringify(stroke.points)) : null
+                            };
+                        }
+                    } else if (item.sourceArray === 'images') {
+                        const idx = item.id ? findImageIndexById(item.id) : item.index;
+                        if (idx >= 0 && idx < images.length) {
+                            const image = images[idx];
+                            return {
+                                id: image.id,
+                                index: idx,
+                                sourceArray: item.sourceArray,
+                                x: image.x,
+                                y: image.y,
+                                width: image.width,
+                                height: image.height
+                            };
+                        }
+                    }
+                    return null;
+                }).filter(s => s !== null);
+            }
+            
+            execute() {
+                this.applyScale(this.ratio);
+                console.log('🔍 縮放物件，比例:', this.ratio);
+            }
+            
+            undo() {
+                // 恢復原始狀態（以 ID 查找，避免索引漂移）
+                this.originalStates.forEach(state => {
+                    if (state.sourceArray === 'strokes') {
+                        const idx = state.id ? findStrokeIndexById(state.id) : state.index;
+                        if (!(idx >= 0 && idx < strokes.length)) return;
+                        const stroke = strokes[idx];
+                        if (state.points) {
+                            stroke.points = JSON.parse(JSON.stringify(state.points));
+                        } else {
+                            stroke.x = state.x;
+                            stroke.y = state.y;
+                            stroke.width = state.width;
+                            stroke.height = state.height;
+                        }
+                    } else if (state.sourceArray === 'images') {
+                        const idx = state.id ? findImageIndexById(state.id) : state.index;
+                        if (!(idx >= 0 && idx < images.length)) return;
+                        images[idx].x = state.x;
+                        images[idx].y = state.y;
+                        images[idx].width = state.width;
+                        images[idx].height = state.height;
+                    }
+                });
+                console.log('↩️ 復原縮放');
+            }
+            
+            applyScale(ratio) {
+                this.originalStates.forEach(state => {
+                    if (state.sourceArray === 'strokes') {
+                        const idx = state.id ? findStrokeIndexById(state.id) : state.index;
+                        if (!(idx >= 0 && idx < strokes.length)) return;
+                        const stroke = strokes[idx];
+                        if (state.points) {
+                            // 筆畫
+                            stroke.points = state.points.map(point => ({
+                                x: this.centerX + (point.x - this.centerX) * ratio,
+                                y: this.centerY + (point.y - this.centerY) * ratio
+                            }));
+                        } else {
+                            // 公式
+                            const oldCenterX = state.x + state.width / 2;
+                            const oldCenterY = state.y + state.height / 2;
+                            stroke.width = state.width * ratio;
+                            stroke.height = state.height * ratio;
+                            stroke.x = this.centerX + (oldCenterX - this.centerX) * ratio - stroke.width / 2;
+                            stroke.y = this.centerY + (oldCenterY - this.centerY) * ratio - stroke.height / 2;
+                        }
+                    } else if (state.sourceArray === 'images') {
+                        const idx = state.id ? findImageIndexById(state.id) : state.index;
+                        if (!(idx >= 0 && idx < images.length)) return;
+                        const image = images[idx];
+                        const oldCenterX = state.x + state.width / 2;
+                        const oldCenterY = state.y + state.height / 2;
+                        image.width = state.width * ratio;
+                        image.height = state.height * ratio;
+                        image.x = this.centerX + (oldCenterX - this.centerX) * ratio - image.width / 2;
+                        image.y = this.centerY + (oldCenterY - this.centerY) * ratio - image.height / 2;
+                    }
+                });
+            }
+        }
+        
+        // ⭐ 5. 清除畫布指令
+        class ClearCanvasCommand extends Command {
+            constructor() {
+                super();
+                this.savedStrokes = [];
+                this.savedImages = [];
+                this.savedFormulaObjects = new Map();
+                this.savedLayerOrder = [];
+            }
+            
+            execute() {
+                // 保存當前狀態
+                this.savedStrokes = [...strokes];
+                this.savedImages = [...images];
+                this.savedFormulaObjects = new Map(formulaObjects);
+                this.savedLayerOrder = [...layerOrder];
+                
+                // 清除
+                strokes.length = 0;
+                images.length = 0;
+                formulaObjects.clear();
+                layerOrder.length = 0;
+                
+                console.log('🗑️ 清除畫布');
+            }
+            
+            undo() {
+                // 恢復
+                strokes.push(...this.savedStrokes);
+                images.push(...this.savedImages);
+                this.savedFormulaObjects.forEach((value, key) => {
+                    formulaObjects.set(key, value);
+                });
+                layerOrder.push(...this.savedLayerOrder);
+                
+                console.log('↩️ 復原清除');
+            }
+        }
+        
+        // ⭐ 6. 刪除物件指令
+        class DeleteItemsCommand extends Command {
+            constructor(items) {
+                super();
+                this.items = JSON.parse(JSON.stringify(items)); // 深拷貝
+                this.deletedStrokes = [];
+                this.deletedImages = [];
+                this.deletedFormulas = new Map();
+            }
+            
+            execute() {
+                // 從後往前刪除（避免 index 錯亂）
+                const sortedItems = [...this.items].sort((a, b) => {
+                    // 以 sourceArray 分組後，盡量用 id 找現行索引，否則退回 index
+                    const idxA = a.sourceArray === 'strokes' ? (a.id ? findStrokeIndexById(a.id) : a.index) : (a.id ? findImageIndexById(a.id) : a.index);
+                    const idxB = b.sourceArray === 'strokes' ? (b.id ? findStrokeIndexById(b.id) : b.index) : (b.id ? findImageIndexById(b.id) : b.index);
+                    return (idxB - idxA);
+                });
+                
+                sortedItems.forEach(item => {
+                    if (item.sourceArray === 'strokes') {
+                        const idx = item.id ? findStrokeIndexById(item.id) : item.index;
+                        if (!(idx >= 0 && idx < strokes.length)) return;
+                        const deleted = strokes.splice(idx, 1)[0];
+                        this.deletedStrokes.push({index: item.index, stroke: deleted});
+                        
+                        // 如果是公式，也從 formulaObjects 中移除
+                        if (deleted.id) {
+                            const formulaData = formulaObjects.get(deleted.id);
+                            if (formulaData) {
+                                this.deletedFormulas.set(deleted.id, formulaData);
+                                formulaObjects.delete(deleted.id);
+                                const layerIndex = layerOrder.indexOf(deleted.id);
+                                if (layerIndex > -1) {
+                                    layerOrder.splice(layerIndex, 1);
+                                }
+                            }
+                        }
+                    } else if (item.sourceArray === 'images') {
+                        const idx = item.id ? findImageIndexById(item.id) : item.index;
+                        if (!(idx >= 0 && idx < images.length)) return;
+                        const deleted = images.splice(idx, 1)[0];
+                        this.deletedImages.push({index: item.index, image: deleted});
+                    }
+                });
+                
+                console.log('🗑️ 刪除物件:', this.items.length, '個');
+            }
+            
+            undo() {
+                // 按原順序插入回去
+                this.deletedStrokes.sort((a, b) => a.index - b.index);
+                this.deletedStrokes.forEach(({index, stroke}) => {
+                    // 優先用原 id 定位插回近似位置；若找不到則使用原 index
+                    const existingIdx = stroke.id ? findStrokeIndexById(stroke.id) : -1;
+                    if (existingIdx === -1) {
+                        strokes.splice(Math.min(index, strokes.length), 0, stroke);
+                    } else {
+                        strokes.splice(existingIdx, 0, stroke);
+                    }
+                });
+                
+                this.deletedImages.sort((a, b) => a.index - b.index);
+                this.deletedImages.forEach(({index, image}) => {
+                    const existingIdx = image.id ? findImageIndexById(image.id) : -1;
+                    if (existingIdx === -1) {
+                        images.splice(Math.min(index, images.length), 0, image);
+                    } else {
+                        images.splice(existingIdx, 0, image);
+                    }
+                });
+                
+                // 恢復公式
+                this.deletedFormulas.forEach((formulaData, formulaId) => {
+                    formulaObjects.set(formulaId, formulaData);
+                    layerOrder.push(formulaId);
+                });
+                
+                console.log('↩️ 復原刪除');
+            }
+        }
         
         // ===== 選取操作組管理函數 =====
         function setSelectionOperation(op) {
-            // 先取消當前操作
-            if (selectionOperation === 'select') {
+            console.log('🔄 setSelectionOperation 被呼叫, 當前:', selectionOperation, '→ 新:', op);
+            
+            // ⭐ 步驟 1: 先重置所有狀態和按鈕樣式（無論切換到什麼模式）
+            isDrawing = false;
+            isSelecting = false;
                 isReadyToSelect = false;
-                selectAreaBtn.style.background = '#3498db';
-                addChatMessage('AI', '❌ **已取消圈選模式**');
-            } else if (selectionOperation === 'move') {
+            isDragging = false;
                 isMoving = false;
-                selectedItems = []; // 清空選中項目
-                moveBtn.style.background = '#9b59b6';
-                addChatMessage('AI', '❌ **已取消移動模式**');
-                updateCanvasCursor(); // 更新游標
-            } else if (selectionOperation === 'scale') {
                 isScaling = false;
-                scaleBtn.style.background = '#f39c12';
-                addChatMessage('AI', '❌ **已取消縮放模式**');
-            } else if (selectionOperation === 'delete') {
                 isDeleting = false;
-                deleteBtn.style.background = '#e74c3c';
-                addChatMessage('AI', '❌ **已取消刪除模式**');
+            selectedItems = [];
+            
+            // ⭐ 清除縮放相關狀態
+            scalingBounds = null;
+            scalingCorner = null;
+            scalingStartPoint = {x: 0, y: 0};
+            scalingInitialBounds = null;
+            scalingInitialItems = null;
+            
+            // 重置所有按鈕樣式為灰底
+            if (selectAreaBtn) selectAreaBtn.style.background = '#95a5a6';
+            if (moveBtn) moveBtn.style.background = '#95a5a6';
+            if (scaleBtn) scaleBtn.style.background = '#95a5a6';
+            if (deleteBtn) deleteBtn.style.background = '#95a5a6';
+            
+            // ⭐ 步驟 2: 如果要取消模式（op === null），顯示取消訊息並返回
+            if (op === null) {
+                selectionOperation = null;
+                updateCanvasCursor();
+                redrawCanvas(); // ⭐ 重繪畫布以清除邊界框
+                addChatMessage('AI', '❌ **已取消操作模式，回到繪圖模式**');
+                console.log('✅ 已重置為繪圖模式');
+                return;
             }
             
-            // 設置新操作
+            // ⭐ 步驟 3: 設置新操作模式
             selectionOperation = op;
             
             if (op === 'select') {
                 isReadyToSelect = true;
                 selectAreaBtn.style.background = '#e74c3c';
                 addChatMessage('AI', '🔲 **圈選模式已激活**\n\n請在畫布上拖動滑鼠圈選區域。');
+                console.log('✅ 圈選模式已激活, isReadyToSelect:', isReadyToSelect);
             } else if (op === 'move') {
                 isMoving = true;
                 moveBtn.style.background = '#e74c3c';
                 addChatMessage('AI', '🖐️ **移動模式已激活**\n\n請圈選要移動的內容，然後拖拽移動。');
-                updateCanvasCursor(); // 更新游標
+                console.log('✅ 移動模式已激活, isMoving:', isMoving);
             } else if (op === 'scale') {
                 isScaling = true;
                 scaleBtn.style.background = '#e74c3c';
                 addChatMessage('AI', '🔍 **縮放模式已激活**\n\n請圈選要縮放的區域，然後拖拽縮放。');
+                console.log('✅ 縮放模式已激活, isScaling:', isScaling);
             } else if (op === 'delete') {
                 isDeleting = true;
                 deleteBtn.style.background = '#e74c3c';
                 addChatMessage('AI', '🗑️ **刪除模式已激活**\n\n請圈選要刪除的區域，然後拖拽刪除。');
+                console.log('✅ 刪除模式已激活, isDeleting:', isDeleting);
             }
+            
+            updateCanvasCursor();
         }
         
         // ===== 全局繪圖函數 =====
+            
+            // ⭐ 計算選中物件的邊界框
+            function calculateScalingBounds() {
+                if (selectedItems.length === 0) {
+                    scalingBounds = null;
+                    console.log('📐 無選中項目，清除邊界框');
+                    return;
+                }
+                
+                let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                
+                console.log('📐 開始計算邊界框，選中項目數:', selectedItems.length);
+                
+                selectedItems.forEach((item, idx) => {
+                    if (item.tool === 'formula' || item.tool === 'image') {
+                        console.log(`   項目 ${idx} (${item.tool}): x=${item.x.toFixed(1)}, y=${item.y.toFixed(1)}, w=${item.width.toFixed(1)}, h=${item.height.toFixed(1)}`);
+                        minX = Math.min(minX, item.x);
+                        minY = Math.min(minY, item.y);
+                        maxX = Math.max(maxX, item.x + item.width);
+                        maxY = Math.max(maxY, item.y + item.height);
+                    } else if (item.tool === 'stroke' && item.bounds) {
+                        console.log(`   項目 ${idx} (stroke): bounds.x=${item.bounds.x.toFixed(1)}, bounds.y=${item.bounds.y.toFixed(1)}, w=${item.bounds.width.toFixed(1)}, h=${item.bounds.height.toFixed(1)}`);
+                        minX = Math.min(minX, item.bounds.x);
+                        minY = Math.min(minY, item.bounds.y);
+                        maxX = Math.max(maxX, item.bounds.x + item.bounds.width);
+                        maxY = Math.max(maxY, item.bounds.y + item.bounds.height);
+                    }
+                });
+                
+                scalingBounds = {
+                    x: minX,
+                    y: minY,
+                    width: maxX - minX,
+                    height: maxY - minY,
+                    centerX: (minX + maxX) / 2,
+                    centerY: (minY + maxY) / 2
+                };
+                
+                console.log('📐 最終邊界框:', {
+                    x: scalingBounds.x.toFixed(1),
+                    y: scalingBounds.y.toFixed(1),
+                    width: scalingBounds.width.toFixed(1),
+                    height: scalingBounds.height.toFixed(1),
+                    centerX: scalingBounds.centerX.toFixed(1),
+                    centerY: scalingBounds.centerY.toFixed(1)
+                });
+            }
+            
+            // ⭐ 繪製縮放邊界框
+            function drawScalingBounds() {
+                if (!scalingBounds || !isScaling) return;
+                
+                ctx.save();
+                
+                // 繪製邊界框
+                ctx.strokeStyle = '#3498db';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.strokeRect(scalingBounds.x, scalingBounds.y, scalingBounds.width, scalingBounds.height);
+                
+                // ⭐ 只繪製右下角控制點
+                const cornerSize = 12;
+                const seX = scalingBounds.x + scalingBounds.width;
+                const seY = scalingBounds.y + scalingBounds.height;
+                
+                ctx.fillStyle = '#e74c3c';
+                ctx.setLineDash([]);
+                ctx.fillRect(seX - cornerSize/2, seY - cornerSize/2, cornerSize, cornerSize);
+                
+                // 繪製中心點
+                ctx.fillStyle = '#3498db';
+                ctx.beginPath();
+                ctx.arc(scalingBounds.centerX, scalingBounds.centerY, 4, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
+            }
+            
+            // ⭐ 檢測滑鼠是否在右下角控制點上
+            function getCornerAtPoint(x, y) {
+                if (!scalingBounds) return null;
+                
+                const cornerSize = 12;
+                
+                // ⭐ 只檢測右下角（SE）依據紅方塊實際邊界
+                const seX = scalingBounds.x + scalingBounds.width;
+                const seY = scalingBounds.y + scalingBounds.height;
+                
+                if (x >= seX - cornerSize/2 && x <= seX + cornerSize/2 &&
+                    y >= seY - cornerSize/2 && y <= seY + cornerSize/2) {
+                    return 'se';
+                }
+                
+                return null;
+            }
+            
+            // ⭐ 計算縮放比例（只針對右下角 SE）
+            function calculateScaleRatio(corner, currentX, currentY) {
+                if (!scalingInitialBounds) return 1.0;
+                
+                const centerX = scalingInitialBounds.centerX;
+                const centerY = scalingInitialBounds.centerY;
+                
+                // 右下角：計算到中心點的距離
+                const initialDx = scalingInitialBounds.x + scalingInitialBounds.width - centerX;
+                const initialDy = scalingInitialBounds.y + scalingInitialBounds.height - centerY;
+                const initialDist = Math.sqrt(initialDx * initialDx + initialDy * initialDy);
+                
+                const currentDx = currentX - centerX;
+                const currentDy = currentY - centerY;
+                const currentDist = Math.sqrt(currentDx * currentDx + currentDy * currentDy);
+                
+                const ratio = currentDist / initialDist;
+                
+                // ⭐ 動態計算縮放限制
+                // 最小：縮到原始大小的 10%（避免太小看不見）
+                // 最大：根據畫布大小動態計算，避免超出畫布太多
+                const canvasMaxDimension = Math.max(canvas.width, canvas.height);
+                const currentMaxDimension = Math.max(scalingInitialBounds.width, scalingInitialBounds.height);
+                
+                // 最大比例：確保縮放後不超過畫布大小的 2 倍
+                const maxRatio = Math.min(10.0, (canvasMaxDimension * 2) / currentMaxDimension);
+                const minRatio = 0.1; // 最小 10%
+                
+                const clampedRatio = Math.max(minRatio, Math.min(maxRatio, ratio));
+                
+                if (clampedRatio !== ratio) {
+                    console.log(`⚠️ 縮放比例已限制: ${ratio.toFixed(2)} → ${clampedRatio.toFixed(2)} (範圍: ${minRatio} ~ ${maxRatio.toFixed(1)})`);
+                }
+                
+                return clampedRatio;
+            }
+            
+            // ⭐ 應用縮放（修復版：基於初始狀態，避免累積誤差）
+            function applyScale(ratio) {
+                if (!scalingInitialBounds || !selectedItems || selectedItems.length === 0) {
+                    console.warn('⚠️ applyScale 中止：缺少必要數據');
+                    return;
+                }
+                
+                const centerX = scalingInitialBounds.centerX;
+                const centerY = scalingInitialBounds.centerY;
+                
+                console.log(`🔍 applyScale 執行：ratio=${ratio.toFixed(2)}, center=(${centerX.toFixed(1)}, ${centerY.toFixed(1)})`);
+                
+                // ⭐ 為每個選中項目保存初始狀態（只在第一次拖拽時保存）
+                if (!scalingInitialItems) {
+                    console.log('💾 首次縮放，保存初始狀態');
+                    scalingInitialItems = selectedItems.map(item => ({
+                        tool: item.tool,
+                        sourceArray: item.sourceArray,
+                        index: item.index,
+                        x: item.tool === 'formula' || item.tool === 'image' ? item.x : undefined,
+                        y: item.tool === 'formula' || item.tool === 'image' ? item.y : undefined,
+                        width: item.tool === 'formula' || item.tool === 'image' ? item.width : undefined,
+                        height: item.tool === 'formula' || item.tool === 'image' ? item.height : undefined,
+                        points: item.tool === 'stroke' ? JSON.parse(JSON.stringify(item.points)) : undefined
+                    }));
+                }
+                
+                // 根據初始狀態計算新狀態
+                scalingInitialItems.forEach((initialItem, idx) => {
+                    const item = selectedItems[idx];
+                    
+                    // 縮放數學公式
+                    if (initialItem.tool === 'formula') {
+                        const initialCenterX = initialItem.x + initialItem.width / 2;
+                        const initialCenterY = initialItem.y + initialItem.height / 2;
+                        
+                        const newWidth = initialItem.width * ratio;
+                        const newHeight = initialItem.height * ratio;
+                        const newX = centerX + (initialCenterX - centerX) * ratio - newWidth / 2;
+                        const newY = centerY + (initialCenterY - centerY) * ratio - newHeight / 2;
+                        
+                        // ⭐ 同時更新 selectedItems 和原始 strokes 陣列
+                        if (initialItem.sourceArray === 'strokes' && initialItem.index >= 0 && initialItem.index < strokes.length) {
+                            // 更新原始陣列
+                            strokes[initialItem.index].x = newX;
+                            strokes[initialItem.index].y = newY;
+                            strokes[initialItem.index].width = newWidth;
+                            strokes[initialItem.index].height = newHeight;
+                            
+                            // ⭐ 同步更新 selectedItems（用於重新計算邊界框）
+                            item.x = newX;
+                            item.y = newY;
+                            item.width = newWidth;
+                            item.height = newHeight;
+                            if (item.bounds) {
+                                item.bounds.x = newX;
+                                item.bounds.y = newY;
+                                item.bounds.width = newWidth;
+                                item.bounds.height = newHeight;
+                            }
+                        }
+                    }
+                    // 縮放圖片
+                    else if (initialItem.tool === 'image') {
+                        const initialCenterX = initialItem.x + initialItem.width / 2;
+                        const initialCenterY = initialItem.y + initialItem.height / 2;
+                        
+                        const newWidth = initialItem.width * ratio;
+                        const newHeight = initialItem.height * ratio;
+                        const newX = centerX + (initialCenterX - centerX) * ratio - newWidth / 2;
+                        const newY = centerY + (initialCenterY - centerY) * ratio - newHeight / 2;
+                        
+                        // ⭐ 同時更新 selectedItems 和原始 images 陣列
+                        if (initialItem.sourceArray === 'images' && initialItem.index >= 0 && initialItem.index < images.length) {
+                            // 更新原始陣列
+                            images[initialItem.index].x = newX;
+                            images[initialItem.index].y = newY;
+                            images[initialItem.index].width = newWidth;
+                            images[initialItem.index].height = newHeight;
+                            
+                            // ⭐ 同步更新 selectedItems
+                            item.x = newX;
+                            item.y = newY;
+                            item.width = newWidth;
+                            item.height = newHeight;
+                        }
+                    }
+                    // 縮放筆畫
+                    else if (initialItem.tool === 'stroke' && initialItem.points) {
+                        const newPoints = initialItem.points.map(point => ({
+                            x: centerX + (point.x - centerX) * ratio,
+                            y: centerY + (point.y - centerY) * ratio
+                        }));
+                        
+                        // ⭐ 同時更新 selectedItems 和原始 strokes 陣列
+                        if (initialItem.sourceArray === 'strokes' && initialItem.index >= 0 && initialItem.index < strokes.length) {
+                            // 更新原始陣列
+                            strokes[initialItem.index].points = newPoints;
+                            
+                            // ⭐ 同步更新 selectedItems 中的 points
+                            item.points = newPoints;
+                            
+                            // ⭐ 更新 bounds（如果存在）
+                            if (item.bounds) {
+                                const xs = newPoints.map(p => p.x);
+                                const ys = newPoints.map(p => p.y);
+                                const minX = Math.min(...xs);
+                                const minY = Math.min(...ys);
+                                const maxX = Math.max(...xs);
+                                const maxY = Math.max(...ys);
+                                item.bounds.x = minX;
+                                item.bounds.y = minY;
+                                item.bounds.width = maxX - minX;
+                                item.bounds.height = maxY - minY;
+                            }
+                        }
+                    }
+                });
+                
+                // ⭐ 重新計算邊界框（使用更新後的 selectedItems）
+                calculateScalingBounds();
+                
+                // 重繪畫布
+                redrawCanvas();
+            }
+            
+            // ⭐ 縮放選中項目函數（使用固定比例）
+            function scaleSelectedItems(ratio) {
+                console.log('🔍 縮放項目，比例:', ratio);
+                
+                if (selectedItems.length === 0) {
+                    addChatMessage('AI', '❌ 沒有選中任何項目');
+                    return;
+                }
+                
+                // 計算所有選中項目的中心點（作為縮放中心）
+                let totalX = 0, totalY = 0, count = 0;
+                
+                selectedItems.forEach(item => {
+                    if (item.tool === 'formula' || item.tool === 'image') {
+                        totalX += item.x + item.width / 2;
+                        totalY += item.y + item.height / 2;
+                        count++;
+                    } else if (item.tool === 'stroke' && item.bounds) {
+                        totalX += item.bounds.x + item.bounds.width / 2;
+                        totalY += item.bounds.y + item.bounds.height / 2;
+                        count++;
+                    }
+                });
+                
+                const centerX = count > 0 ? totalX / count : 0;
+                const centerY = count > 0 ? totalY / count : 0;
+                
+                console.log('📍 縮放中心點:', centerX.toFixed(1), centerY.toFixed(1));
+                
+                // 縮放每個項目
+                selectedItems.forEach(item => {
+                    // ⭐ 縮放數學公式
+                    if (item.tool === 'formula') {
+                        const oldCenterX = item.x + item.width / 2;
+                        const oldCenterY = item.y + item.height / 2;
+                        
+                        // 縮放尺寸
+                        item.width *= ratio;
+                        item.height *= ratio;
+                        
+                        // 重新計算位置（保持相對於中心點的位置）
+                        item.x = centerX + (oldCenterX - centerX) * ratio - item.width / 2;
+                        item.y = centerY + (oldCenterY - centerY) * ratio - item.height / 2;
+                        
+                        // 更新原始陣列
+                        if (item.sourceArray === 'strokes' && item.index >= 0 && item.index < strokes.length) {
+                            strokes[item.index].x = item.x;
+                            strokes[item.index].y = item.y;
+                            strokes[item.index].width = item.width;
+                            strokes[item.index].height = item.height;
+                        }
+                        
+                        console.log('  ✅ 縮放數學公式:', item.id, '→', item.width.toFixed(1), 'x', item.height.toFixed(1));
+                    }
+                    // 縮放圖片
+                    else if (item.tool === 'image') {
+                        const oldCenterX = item.x + item.width / 2;
+                        const oldCenterY = item.y + item.height / 2;
+                        
+                        item.width *= ratio;
+                        item.height *= ratio;
+                        item.x = centerX + (oldCenterX - centerX) * ratio - item.width / 2;
+                        item.y = centerY + (oldCenterY - centerY) * ratio - item.height / 2;
+                        
+                        if (item.sourceArray === 'images' && item.index >= 0 && item.index < images.length) {
+                            images[item.index].x = item.x;
+                            images[item.index].y = item.y;
+                            images[item.index].width = item.width;
+                            images[item.index].height = item.height;
+                        }
+                        
+                        console.log('  ✅ 縮放圖片:', item.width.toFixed(1), 'x', item.height.toFixed(1));
+                    }
+                    // 縮放筆畫
+                    else if (item.tool === 'stroke' && item.points) {
+                        item.points.forEach(point => {
+                            // 相對於中心點縮放
+                            point.x = centerX + (point.x - centerX) * ratio;
+                            point.y = centerY + (point.y - centerY) * ratio;
+                        });
+                        
+                        if (item.sourceArray === 'strokes' && item.index >= 0 && item.index < strokes.length) {
+                            strokes[item.index].points = item.points;
+                        }
+                        
+                        console.log('  ✅ 縮放筆畫:', item.points.length, '點');
+                    }
+                });
+                
+                // 重繪畫布
+                redrawCanvas();
+                
+                const percentage = (ratio * 100).toFixed(0);
+                addChatMessage('AI', `✅ **縮放完成！**\n\n縮放比例：${percentage}%\n選中項目：${selectedItems.length} 個`);
+            }
             
             // 移動選中項目函數
             function moveSelectedItems(deltaX, deltaY) {
                 console.log('🔄 移動項目: Δx=' + deltaX + ', Δy=' + deltaY);
 
                 selectedItems.forEach(item => {
+                    // ⭐ 移動數學公式
+                    if (item.tool === 'formula') {
+                        // 更新 selectedItems 中的數據
+                        item.x += deltaX;
+                        item.y += deltaY;
+                        
+                        // 更新原始 strokes 陣列中的數據
+                        if (item.sourceArray === 'strokes' && item.index >= 0 && item.index < strokes.length) {
+                            strokes[item.index].x = item.x;
+                            strokes[item.index].y = item.y;
+                            console.log('  ✅ 移動數學公式:', item.id || `index ${item.index}`, '→', item.x.toFixed(1), item.y.toFixed(1));
+                        }
+                    }
                     // 移動圖片類內容
-                    if (item.tool === 'image') {
+                    else if (item.tool === 'image') {
                         // 更新selectedItems中的數據
                         item.x += deltaX;
                         item.y += deltaY;
                         // 更新原始images數組中的數據
-                        if (item.index >= 0 && item.index < images.length) {
+                        if (item.sourceArray === 'images' && item.index >= 0 && item.index < images.length) {
                             images[item.index].x = item.x;
                             images[item.index].y = item.y;
                         }
-                        console.log('  移動圖片:', item.x.toFixed(1), item.y.toFixed(1));
+                        console.log('  ✅ 移動圖片:', item.x.toFixed(1), item.y.toFixed(1));
                     }
                     // 移動筆畫類內容
-                    else if (item.points) {
+                    else if (item.tool === 'stroke' && item.points) {
                         // 更新selectedItems中的數據
                         item.points.forEach(point => {
                             point.x += deltaX;
                             point.y += deltaY;
                         });
                         // 更新原始strokes數組中的數據
-                        if (item.index >= 0 && item.index < strokes.length) {
+                        if (item.sourceArray === 'strokes' && item.index >= 0 && item.index < strokes.length) {
                             strokes[item.index].points = item.points;
                         }
-                        console.log('  移動筆畫:', item.points.length + '點');
+                        console.log('  ✅ 移動筆畫:', item.points.length + '點');
                     }
                 });
 
@@ -1799,37 +3267,82 @@
                 redrawCanvas();
             }
             
-            // 獲取選區中的項目 (圖片和筆畫)
+            // 獲取選區中的項目 (圖片、筆畫、數學公式)
             function getItemsInSelection(selection) {
                 const items = [];
-                const overlapThreshold = 0.3; // 30% 重疊度阈值
+                const overlapThreshold = 0.5; // ⭐ 50% 重疊度閾值
 
-                // 檢查所有圖片
-                images.forEach(image => {
+                console.log('🔍 開始檢測選區內的項目...');
+                console.log('   選區:', selection);
+
+                // ⭐ 檢查所有圖片（images 陣列）
+                images.forEach((image, imageIndex) => {
                     const overlapRatio = getOverlapRatio(
                         {x: image.x, y: image.y, width: image.width, height: image.height},
                         selection
                     );
                     if (overlapRatio >= overlapThreshold) {
+                        console.log(`   ✅ 圖片 ${imageIndex} 重疊 ${(overlapRatio * 100).toFixed(1)}% - 選中`);
                         items.push({
                             tool: 'image',
-                            index: images.indexOf(image),
+                            sourceArray: 'images',
+                            index: imageIndex,
+                            id: image.id,
                             x: image.x,
                             y: image.y,
                             width: image.width,
                             height: image.height,
                             imageData: image.imageData
                         });
+                    } else {
+                        console.log(`   ❌ 圖片 ${imageIndex} 重疊 ${(overlapRatio * 100).toFixed(1)}% - 未選中`);
                     }
                 });
 
-                // 檢查所有筆畫
+                // ⭐ 檢查所有筆畫（strokes 陣列）
                 strokes.forEach((stroke, strokeIndex) => {
-                    // 確保stroke有points屬性且不為空
-                    if (!stroke.points || !Array.isArray(stroke.points) || stroke.points.length === 0) {
-                        return; // 跳過無效的stroke
+                    // 處理數學公式（tool === 'image' 或有 type === 'math_formula'）
+                    if (stroke.tool === 'image' || stroke.type === 'math_formula') {
+                        // 數學公式：使用實際圖片區域
+                        const formulaBounds = {
+                            x: stroke.x,
+                            y: stroke.y,
+                            width: stroke.width,
+                            height: stroke.height
+                        };
+                        
+                        const overlapRatio = getOverlapRatio(formulaBounds, selection);
+                        if (overlapRatio >= overlapThreshold) {
+                            console.log(`   ✅ 數學公式 ${strokeIndex} (${stroke.id || 'unknown'}) 重疊 ${(overlapRatio * 100).toFixed(1)}% - 選中`);
+                            items.push({
+                                tool: 'formula',
+                                sourceArray: 'strokes',
+                                index: strokeIndex,
+                                x: stroke.x,
+                                y: stroke.y,
+                                width: stroke.width,
+                                height: stroke.height,
+                                image: stroke.image,
+                                id: stroke.id,
+                                type: stroke.type,
+                                originalLatex: stroke.originalLatex,
+                                bounds: formulaBounds
+                            });
+                        } else {
+                            console.log(`   ❌ 數學公式 ${strokeIndex} (${stroke.id || 'unknown'}) 重疊 ${(overlapRatio * 100).toFixed(1)}% - 未選中`);
+                        }
                     }
-
+                    // 處理普通筆畫（有 points 陣列）
+                    else if (stroke.points && Array.isArray(stroke.points) && stroke.points.length > 0) {
+                        // 計算筆畫內有多少點在選區內
+                        const pointsInSelection = stroke.points.filter(p => 
+                            p.x >= selection.x && p.x <= selection.x + selection.width &&
+                            p.y >= selection.y && p.y <= selection.y + selection.height
+                        ).length;
+                        
+                        const pointOverlapRatio = pointsInSelection / stroke.points.length;
+                        
+                        if (pointOverlapRatio >= overlapThreshold) {
                     // 計算筆畫的邊界框
                     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
                     stroke.points.forEach(point => {
@@ -1839,7 +3352,6 @@
                         maxY = Math.max(maxY, point.y);
                     });
 
-                    if (minX !== Infinity) {
                         const strokeBounds = {
                             x: minX,
                             y: minY,
@@ -1847,20 +3359,24 @@
                             height: maxY - minY
                         };
 
-                        const overlapRatio = getOverlapRatio(strokeBounds, selection);
-                        if (overlapRatio >= overlapThreshold) {
+                            console.log(`   ✅ 筆畫 ${strokeIndex} 重疊 ${(pointOverlapRatio * 100).toFixed(1)}% (${pointsInSelection}/${stroke.points.length} 點) - 選中`);
                             items.push({
                                 tool: 'stroke',
+                                sourceArray: 'strokes',
                                 index: strokeIndex,
+                                id: stroke.id,
                                 points: stroke.points,
                                 color: stroke.color,
                                 size: stroke.size,
                                 bounds: strokeBounds
                             });
+                        } else if (pointsInSelection > 0) {
+                            console.log(`   ❌ 筆畫 ${strokeIndex} 重疊 ${(pointOverlapRatio * 100).toFixed(1)}% (${pointsInSelection}/${stroke.points.length} 點) - 未選中`);
                         }
                     }
                 });
 
+                console.log(`🎯 選中 ${items.length} 個項目:`, items.map(i => `${i.tool}[${i.index}]`).join(', '));
                 return items;
             }
 
@@ -1934,8 +3450,11 @@
                 if (!canvas || !ctx) return;
                 
                 if (isDrawing && currentStroke) {
-                    strokes.push(currentStroke);
+                    // ⭐ 改用 Command Pattern
+                    const command = new DrawStrokeCommand(currentStroke);
+                    historyManager.execute(command);
                     currentStroke = null;
+                    redrawCanvas(); // 重繪以顯示新筆畫
                 }
                 isDrawing = false;
             }
@@ -1975,7 +3494,7 @@
             canvas.addEventListener('mousedown', handleCanvasMouseDown);
             canvas.addEventListener('mousemove', handleCanvasMouseMove);
             canvas.addEventListener('mouseup', handleCanvasMouseUp);
-            canvas.addEventListener('mouseout', handleCanvasMouseUp);
+            canvas.addEventListener('mouseout', handleCanvasMouseOut);
             
             // 觸控事件支援
             canvas.addEventListener('touchstart', function(e) {
@@ -2021,7 +3540,7 @@
                     // 取消圈選模式（如果激活）
                     if (isReadyToSelect && selectAreaBtn) {
                         isReadyToSelect = false;
-                        selectAreaBtn.style.background = '#3498db';  // 恢復原色
+                        selectAreaBtn.style.background = '#95a5a6';  // 恢復灰底
                         console.log('❌ 切換工具，取消圈選模式');
                     }
                     
@@ -2065,6 +3584,34 @@
                 console.warn('size-slider or size-display not found, skipping size setup');
             }
             
+            // ⭐ Undo 按鈕
+            const undoBtn = document.getElementById('undo-btn');
+            if (undoBtn) {
+                undoBtn.addEventListener('click', function() {
+                    if (historyManager.undo()) {
+                        addChatMessage('AI', '↩️ **回上一步**');
+                    } else {
+                        addChatMessage('AI', '⚠️ 已經是最早的狀態了');
+                    }
+                });
+            } else {
+                console.warn('undo-btn not found, skipping undo button setup');
+            }
+            
+            // ⭐ Redo 按鈕
+            const redoBtn = document.getElementById('redo-btn');
+            if (redoBtn) {
+                redoBtn.addEventListener('click', function() {
+                    if (historyManager.redo()) {
+                        addChatMessage('AI', '➡️ **重做**');
+                    } else {
+                        addChatMessage('AI', '⚠️ 沒有可以重做的操作');
+                    }
+                });
+            } else {
+                console.warn('redo-btn not found, skipping redo button setup');
+            }
+            
             // 清除按鈕
             const clearBtn = document.getElementById('clear-btn');
             if (clearBtn) {
@@ -2073,14 +3620,31 @@
                         console.error('Canvas not initialized');
                         return;
                     }
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    strokes = []; // 清空筆畫記錄
+                    
+                    // ⭐ 改用 Command Pattern
+                    const command = new ClearCanvasCommand();
+                    historyManager.execute(command);
+                    redrawCanvas(); // 清除後重繪（顯示空白畫布）
+                    
                     console.log('Canvas cleared');
-                    addChatMessage('AI', '畫布已清除！請繼續您的創作。✨');
+                    addChatMessage('AI', '🗑️ **畫布已清除！**\n\n提示：按 Ctrl+Z 可以復原清除操作。');
                 });
             } else {
                 console.warn('clear-btn not found, skipping clear button setup');
             }
+            
+            // ⭐ 更新歷史記錄 UI 狀態的函數
+            function updateHistoryUI() {
+                if (undoBtn) {
+                    undoBtn.disabled = !historyManager.canUndo();
+                }
+                if (redoBtn) {
+                    redoBtn.disabled = !historyManager.canRedo();
+                }
+            }
+            
+            // 初始化 UI 狀態
+            updateHistoryUI();
             
             // 分析圖像按鈕
             const analyzeBtn = document.getElementById('analyze-btn');
@@ -2090,6 +3654,29 @@
                 });
             } else {
                 console.warn('analyze-btn not found, skipping analyze button setup');
+            }
+            
+            // 上傳圖片
+            const uploadBtn = document.getElementById('upload-image-btn');
+            const uploadInput = document.getElementById('image-upload-input');
+            if (uploadBtn && uploadInput) {
+                uploadBtn.addEventListener('click', function() {
+                    uploadInput.click();
+                });
+                uploadInput.addEventListener('change', function() {
+                    const file = this.files && this.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        const img = new Image();
+                        img.onload = () => {
+                            addImageToCanvas(img);
+                        };
+                        img.src = reader.result;
+                    };
+                    reader.readAsDataURL(file);
+                    this.value = '';
+                });
             }
             
             // 儲存按鈕 (PNG下載)
@@ -2152,6 +3739,19 @@
             const sendBtn = document.getElementById('send-btn');
             if (!chatMessages || !chatInput || !sendBtn) {
                 console.warn('Chat elements missing, chat will be disabled');
+            }
+            
+            // 綁定聊天送出（按鈕與 Enter）
+            if (sendBtn) {
+                sendBtn.addEventListener('click', sendMessage);
+            }
+            if (chatInput) {
+                chatInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                    }
+                });
             }
             
 
@@ -2350,11 +3950,16 @@
                 addChatMessage('AI', '🤖 正在調用 AI 模型分析您的繪圖...');
                 
                 // 發送到後端進行真實 AI 分析
+                const headers = {
+                    'Content-Type': 'application/json',
+                    ...AIConfig.getHeaders()
+                };
+                
+                console.log('📤 發送分析請求，Headers:', headers);
+                
                 fetch('/api/analyze-image', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: headers,
                     body: JSON.stringify({
                         image_data: imageDataURL,
                         prompt: "請分析這個UI設計草圖，識別其中的元素（如按鈕、表單、導航等），評估設計的優缺點，並提供具體的改進建議。"
@@ -2470,16 +4075,65 @@
             // 初始化模式設置
             updateCanvasCursor();
             
-            // 添加鍵盤事件監聽器（Escape 鍵取消圈選準備）
+            // ⭐ 添加鍵盤事件監聽器（Undo/Redo 和 Escape）
             document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' || e.key === 'Esc') {
-                    if (isReadyToSelect || isSelecting) {
-                        console.log('⚠️  按 Escape 取消圈選');
-                        isReadyToSelect = false;
-                        isSelecting = false;
-                        clearSelection();
-                        addChatMessage('AI', '❌ **已取消圈選**');
+                // === Ctrl+Z: Undo ===
+                if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (historyManager.undo()) {
+                        addChatMessage('AI', '↩️ **回上一步**');
+                    } else {
+                        addChatMessage('AI', '⚠️ 已經是最早的狀態了');
                     }
+                    return;
+                }
+                
+                // === Ctrl+Shift+Z 或 Ctrl+Y: Redo ===
+                if ((e.ctrlKey && e.shiftKey && e.key === 'Z') || (e.ctrlKey && e.key === 'y')) {
+                    e.preventDefault();
+                    if (historyManager.redo()) {
+                        addChatMessage('AI', '➡️ **重做**');
+                    } else {
+                        addChatMessage('AI', '⚠️ 沒有可以重做的操作');
+                    }
+                    return;
+                }
+                
+                // === Escape: 取消所有操作模式 ===
+                if (e.key === 'Escape' || e.key === 'Esc') {
+                    console.log('⚠️  按 Escape 取消所有操作模式');
+                    
+                    // 重置所有狀態變數
+                    isDrawing = false;
+                        isSelecting = false;
+                    isReadyToSelect = false;
+                    isDragging = false;
+                    isMoving = false;
+                    isScaling = false;
+                    isDeleting = false;
+                    selectedItems = [];
+                    selectionOperation = null;
+                    
+                    // ⭐ 清除縮放相關狀態
+                    scalingBounds = null;
+                    scalingCorner = null;
+                    scalingStartPoint = {x: 0, y: 0};
+                    scalingInitialBounds = null;
+                    scalingInitialItems = null;
+                    
+                    // 重置所有按鈕樣式（統一灰色未啟用）
+                    if (selectAreaBtn) selectAreaBtn.style.background = '#95a5a6';
+                    if (moveBtn) moveBtn.style.background = '#95a5a6';
+                    if (scaleBtn) scaleBtn.style.background = '#95a5a6';
+                    if (deleteBtn) deleteBtn.style.background = '#95a5a6';
+                    
+                    // 清除選擇
+                        clearSelection();
+                    
+                    // 更新游標
+                    updateCanvasCursor();
+                    
+                    addChatMessage('AI', '❌ **已取消所有操作模式，回到繪圖模式**');
                 }
             });
             
@@ -2500,15 +4154,6 @@
                 } else {
                     setSelectionOperation('move'); // 激活移動
                 }
-            });
-        }
-
-        // 測試內容按鈕 - 添加測試圖片和筆畫
-        const testContentBtn = document.getElementById('test-content-btn');
-        if (testContentBtn) {
-            testContentBtn.addEventListener('click', function() {
-                addTestContent();
-                addChatMessage('AI', '✅ 已添加測試內容！\n\n現在你可以測試移動功能：\n1. 點擊「🖐️ 移動選取」按鈕\n2. 在畫布上拖拽圈選內容\n3. 拖拽移動選中的項目');
             });
         }
 
@@ -2535,13 +4180,42 @@
                 console.log('🖐️ 物件選取模式選中項目:', selectedItems.length, '個');
 
                 if (selectedItems.length > 0) {
+                    // ⭐ 檢查當前模式
+                    if (isDeleting) {
+                        // 刪除模式：執行刪除
+                        const command = new DeleteItemsCommand(selectedItems);
+                        historyManager.execute(command);
+                        redrawCanvas();
+                        addChatMessage('AI', `🗑️ **已刪除 ${selectedItems.length} 個物件**\n\n可使用 Ctrl+Z 復原`);
+                        
+                        // 重置狀態
+                        isDeleting = false;
+                        selectedItems = [];
+                        selectionOperation = null;
+                        if (deleteBtn) deleteBtn.style.background = '#95a5a6';
+                        
+                        dialog.style.display = 'none';
+                        updateCanvasCursor();
+                    } else if (isScaling) {
+                        // 縮放模式：計算邊界框並準備拖拽縮放
+                        addChatMessage('AI', `✅ 選中了 ${selectedItems.length} 個物件\n\n請拖拽邊界框的**角落**來縮放`);
+                        dialog.style.display = 'none';
+                        
+                        // 計算邊界框
+                        calculateScalingBounds();
+                        
+                        // 重繪畫布（顯示邊界框）
+                        redrawCanvas();
+                    } else {
+                        // 移動模式：準備拖拽
                     addChatMessage('AI', `✅ 選中了 ${selectedItems.length} 個完整物件，請拖拽移動`);
                     updateCanvasCursor(); // 更新為移動游標
+                        dialog.style.display = 'none';
+                    }
                 } else {
                     addChatMessage('AI', '❌ 圈選區域內沒有找到完整的物件');
-                }
-
                 dialog.style.display = 'none';
+                }
             };
 
             // 精確切割模式
@@ -2567,6 +4241,7 @@
             cancelBtn.onclick = function() {
                 console.log('❌ 取消選取模式選擇');
                 addChatMessage('AI', '❌ 已取消選取操作');
+                clearSelection();
                 dialog.style.display = 'none';
                 updateCanvasCursor(); // 重置游標
             };
@@ -2577,49 +4252,6 @@
                     cancelBtn.click();
                 }
             };
-        }
-
-        // 添加測試內容的函數
-        function addTestContent() {
-            // 添加一個測試圖片（用彩色矩形代替）
-            const testImage = {
-                x: 100,
-                y: 100,
-                width: 80,
-                height: 60,
-                imageData: null, // 實際項目中這會是圖片數據
-                color: '#3498db' // 用於繪製測試矩形
-            };
-            images.push(testImage);
-
-            // 添加一個測試筆畫（簡單的線條）
-            const testStroke = {
-                points: [
-                    {x: 250, y: 150},
-                    {x: 300, y: 150},
-                    {x: 320, y: 170},
-                    {x: 280, y: 190}
-                ],
-                color: '#e74c3c',
-                size: 3
-            };
-            strokes.push(testStroke);
-
-            // 添加一個測試公式（用矩形代替）
-            const testFormula = {
-                x: 400,
-                y: 120,
-                width: 120,
-                height: 40,
-                text: 'E=mc²', // 測試用的公式文本
-                color: '#27ae60'
-            };
-            images.push(testFormula);
-
-            // 重繪畫布以顯示測試內容
-            redrawCanvas();
-
-            console.log('🧪 已添加測試內容:', {images: images.length, strokes: strokes.length});
         }
         
         // 縮放按鈕 - 縮放模式切換
@@ -2645,6 +4277,9 @@
                 }
             });
         }
+        
+        // 初始化 AI 設定
+        initAISettings();
     </script>
 
     <!-- 選取模式對話框 -->
